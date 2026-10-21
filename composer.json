@@ -1,0 +1,7 @@
+{
+    "require": {
+        "google/apiclient": "^2.19",
+        "google/auth": "^1.53",
+        "phpseclib/phpseclib": "~3.0"
+    }
+}

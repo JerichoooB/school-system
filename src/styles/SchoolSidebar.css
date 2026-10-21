@@ -1,0 +1,738 @@
+/* =========================================================
+   SCHOOL HUB GLOBAL SIDEBAR
+   ========================================================= */
+
+.school-hub-sidebar {
+    --sidebar-width: 238px;
+    --sidebar-collapsed-width: 74px;
+
+    --sidebar-background: #e9ece9;
+    --sidebar-hover: #dfe3e0;
+    --sidebar-active: #101314;
+
+    --sidebar-text: #101314;
+    --sidebar-secondary: #4f5755;
+    --sidebar-muted: #7a817f;
+
+    --sidebar-border: rgba(16, 19, 20, 0.10);
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    z-index: 100;
+
+    width: var(--sidebar-width);
+
+    display: flex;
+    flex-direction: column;
+
+    background: var(--sidebar-background);
+
+    color: var(--sidebar-text);
+
+    border-right: 1px solid var(--sidebar-border);
+
+    box-sizing: border-box;
+
+    transition:
+        width 0.25s ease,
+        transform 0.25s ease,
+        background-color 0.25s ease,
+        color 0.25s ease;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+.school-hub-sidebar.is-dark {
+    --sidebar-background: #151b1d;
+    --sidebar-hover: #20292b;
+    --sidebar-active: #fffffa;
+
+    --sidebar-text: #fffffa;
+    --sidebar-secondary: #c7c9c5;
+    --sidebar-muted: #858b89;
+
+    --sidebar-border: rgba(255, 255, 250, 0.10);
+}
+
+
+/* =========================================================
+   LIGHT MODE
+   ========================================================= */
+
+.school-hub-sidebar.is-light {
+    --sidebar-background: #e9ece9;
+    --sidebar-hover: #dfe3e0;
+    --sidebar-active: #101314;
+
+    --sidebar-text: #101314;
+    --sidebar-secondary: #4f5755;
+    --sidebar-muted: #7a817f;
+
+    --sidebar-border: rgba(16, 19, 20, 0.10);
+}
+
+
+/* =========================================================
+   COLLAPSED
+   ========================================================= */
+
+.school-hub-sidebar.is-collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.school-hub-sidebar-header {
+    height: 74px;
+
+    flex: 0 0 74px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 12px;
+
+    box-sizing: border-box;
+
+    border-bottom: 1px solid var(--sidebar-border);
+}
+
+
+.school-hub-brand {
+    min-width: 0;
+
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: var(--sidebar-text);
+
+    text-align: left;
+
+    cursor: pointer;
+}
+
+
+.school-hub-logo {
+    width: 37px;
+    height: 37px;
+
+    flex: 0 0 37px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: var(--sidebar-active);
+
+    color: var(--sidebar-background);
+}
+
+
+.school-hub-brand-copy {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+
+    white-space: nowrap;
+
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+.school-hub-brand-copy strong {
+    font-size: 12px;
+
+    font-weight: 750;
+
+    letter-spacing: 0.07em;
+
+    color: var(--sidebar-text);
+}
+
+
+.school-hub-brand-copy small {
+    font-size: 8px;
+
+    font-weight: 650;
+
+    letter-spacing: 0.10em;
+
+    color: var(--sidebar-muted);
+}
+
+
+/* =========================================================
+   COLLAPSED BRAND
+   ========================================================= */
+
+.school-hub-sidebar.is-collapsed
+.school-hub-sidebar-header {
+    justify-content: center;
+
+    padding: 0;
+}
+
+
+.school-hub-sidebar.is-collapsed
+.school-hub-brand {
+    flex: 0 0 auto;
+
+    justify-content: center;
+}
+
+
+.school-hub-sidebar.is-collapsed
+.school-hub-brand-copy {
+    width: 0;
+
+    opacity: 0;
+
+    transform: translateX(-5px);
+
+    overflow: hidden;
+}
+
+
+.school-hub-mobile-close {
+    display: none;
+
+    border: 0;
+
+    background: transparent;
+
+    color: var(--sidebar-secondary);
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   SIDEBAR CONTENT
+   ========================================================= */
+
+.school-hub-sidebar-content {
+    flex: 1;
+
+    min-height: 0;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    padding: 20px 10px 12px;
+
+    scrollbar-width: thin;
+}
+
+
+.school-hub-sidebar-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+
+.school-hub-sidebar-content::-webkit-scrollbar-thumb {
+    background: var(--sidebar-border);
+
+    border-radius: 999px;
+}
+
+
+/* =========================================================
+   NAVIGATION GROUP
+   ========================================================= */
+
+.school-hub-navigation-group {
+    margin-bottom: 23px;
+}
+
+
+.school-hub-navigation-group:last-child {
+    margin-bottom: 0;
+}
+
+
+.school-hub-navigation-title {
+    padding: 0 11px;
+
+    margin-bottom: 7px;
+
+    color: var(--sidebar-muted);
+
+    font-size: 8px;
+
+    font-weight: 750;
+
+    letter-spacing: 0.15em;
+
+    white-space: nowrap;
+
+    transition:
+        opacity 0.18s ease,
+        height 0.18s ease,
+        margin 0.18s ease;
+}
+
+
+.school-hub-sidebar.is-collapsed
+.school-hub-navigation-title {
+    height: 0;
+
+    margin: 0;
+
+    padding: 0;
+
+    opacity: 0;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   NAV ITEMS
+   ========================================================= */
+
+.school-hub-navigation-items {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.school-hub-navigation-item {
+    position: relative;
+
+    width: 100%;
+    min-height: 40px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    padding: 0 10px;
+
+    background: transparent;
+
+    color: var(--sidebar-secondary);
+
+    font-family: inherit;
+
+    font-size: 11px;
+
+    font-weight: 550;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+.school-hub-navigation-item:hover {
+    background: var(--sidebar-hover);
+
+    color: var(--sidebar-text);
+}
+
+
+.school-hub-navigation-item:active {
+    transform: scale(0.985);
+}
+
+
+.school-hub-navigation-item.is-active {
+    background: var(--sidebar-active);
+
+    color: var(--sidebar-background);
+}
+
+
+.school-hub-sidebar.is-dark
+.school-hub-navigation-item.is-active {
+    color: #101314;
+}
+
+
+.school-hub-sidebar.is-light
+.school-hub-navigation-item.is-active {
+    color: #fffffa;
+}
+
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.school-hub-navigation-icon {
+    width: 20px;
+
+    height: 20px;
+
+    flex: 0 0 20px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+}
+
+
+.school-hub-navigation-label {
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+    transition:
+        opacity 0.18s ease,
+        width 0.18s ease;
+}
+
+
+.school-hub-navigation-arrow {
+    margin-left: auto;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    opacity: 0.7;
+}
+
+
+/* =========================================================
+   COLLAPSED NAV
+   ========================================================= */
+
+.school-hub-sidebar.is-collapsed
+.school-hub-navigation-item {
+    justify-content: center;
+
+    padding: 0;
+}
+
+
+.school-hub-sidebar.is-collapsed
+.school-hub-navigation-label {
+    width: 0;
+
+    opacity: 0;
+
+    overflow: hidden;
+}
+
+
+.school-hub-sidebar.is-collapsed
+.school-hub-navigation-arrow {
+    display: none;
+}
+
+
+/* =========================================================
+   BOTTOM
+   ========================================================= */
+
+.school-hub-sidebar-bottom {
+    flex: 0 0 auto;
+
+    padding: 10px;
+
+    border-top: 1px solid var(--sidebar-border);
+}
+
+
+.sidebar-bottom-item {
+    margin-bottom: 3px;
+}
+
+
+.sidebar-logout {
+    margin-bottom: 8px;
+
+    color: var(--sidebar-secondary);
+}
+
+
+.sidebar-logout:hover {
+    color: var(--sidebar-text);
+}
+
+
+/* =========================================================
+   COLLAPSE BUTTON
+   ========================================================= */
+
+.school-hub-collapse-button {
+    width: 100%;
+
+    min-height: 38px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    border: 1px solid var(--sidebar-border);
+
+    border-radius: 9px;
+
+    padding: 0 10px;
+
+    background: transparent;
+
+    color: var(--sidebar-muted);
+
+    font-family: inherit;
+
+    font-size: 9px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+
+.school-hub-collapse-button:hover {
+    background: var(--sidebar-hover);
+
+    color: var(--sidebar-text);
+
+    border-color: var(--sidebar-border);
+}
+
+
+.school-hub-sidebar.is-collapsed
+.school-hub-collapse-button {
+    justify-content: center;
+
+    padding: 0;
+}
+
+
+.school-hub-sidebar.is-collapsed
+.school-hub-collapse-button span {
+    display: none;
+}
+
+
+/* =========================================================
+   MOBILE OVERLAY
+   ========================================================= */
+
+.school-hub-sidebar-overlay {
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 90;
+
+    border: 0;
+
+    background: rgba(0, 0, 0, 0.40);
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.school-hub-navigation-item:focus-visible,
+.school-hub-collapse-button:focus-visible,
+.school-hub-brand:focus-visible,
+.school-hub-mobile-close:focus-visible {
+    outline: 2px solid var(--sidebar-text);
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .school-hub-sidebar {
+        width: 238px;
+
+        transform: translateX(-100%);
+
+        box-shadow:
+            12px 0 40px rgba(0, 0, 0, 0.14);
+    }
+
+
+    .school-hub-sidebar.is-mobile-open {
+        transform: translateX(0);
+    }
+
+
+    .school-hub-sidebar.is-collapsed {
+        width: 238px;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-brand-copy {
+        width: auto;
+
+        opacity: 1;
+
+        transform: none;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-sidebar-header {
+        justify-content: flex-start;
+
+        padding: 0 12px;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-brand {
+        flex: 1;
+
+        justify-content: flex-start;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-navigation-title {
+        height: auto;
+
+        margin-bottom: 7px;
+
+        padding: 0 11px;
+
+        opacity: 1;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-navigation-item {
+        justify-content: flex-start;
+
+        padding: 0 10px;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-navigation-label {
+        width: auto;
+
+        opacity: 1;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-collapse-button {
+        justify-content: flex-start;
+
+        padding: 0 10px;
+    }
+
+
+    .school-hub-sidebar.is-collapsed
+    .school-hub-collapse-button span {
+        display: inline;
+    }
+
+
+    .school-hub-mobile-close {
+        width: 34px;
+        height: 34px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 8px;
+    }
+
+
+    .school-hub-mobile-close:hover {
+        background: var(--sidebar-hover);
+
+        color: var(--sidebar-text);
+    }
+
+
+    .school-hub-sidebar-overlay {
+        display: block;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .school-hub-sidebar,
+    .school-hub-navigation-item,
+    .school-hub-navigation-label,
+    .school-hub-brand-copy {
+        transition: none !important;
+    }
+
+}

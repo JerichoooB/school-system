@@ -1,0 +1,838 @@
+
+html,
+body,
+#root {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+
+/* =========================
+   BASE / LIGHT MODE
+========================= */
+
+html,
+body {
+    background: #fffffa;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+    background: #fffffa;
+    color: #101314;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+    overflow: hidden;
+    transition:
+        background 0.25s ease,
+        color 0.25s ease;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.login-header {
+    position: absolute;
+    top: 18px;
+    left: 42px;
+    right: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 38px;
+    font-weight: 600;
+    letter-spacing: -1.5px;
+    color: #101314;
+}
+
+.brand-logo {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    background: #101314;
+    border: 1px solid #101314;
+    color: #fffffa;
+    font-size: 25px;
+    font-weight: 700;
+}
+
+
+/* =========================
+   THEME BUTTON
+========================= */
+
+.theme-button {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #101314;
+    font-size: 22px;
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.theme-button:hover {
+    background: transparent;
+    opacity: 0.65;
+}
+
+
+/* =========================
+   LOGIN CONTENT
+========================= */
+
+.login-content {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 70px 20px 20px;
+}
+
+.login-section {
+    width: 430px;
+    max-width: 100%;
+    text-align: center;
+    color: #101314;
+}
+
+
+/* =========================
+   HEADING
+========================= */
+
+.login-section h1 {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    font-weight: 700;
+    color: #101314;
+}
+
+.login-description {
+    margin: 12px 0 20px;
+    font-size: 16px;
+    line-height: 1.45;
+    color: #555b5c;
+}
+
+
+/* =========================
+   INPUTS
+========================= */
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    height: 47px;
+    margin-bottom: 20px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    height: 100%;
+    padding: 0 45px;
+    border: 1px solid #101314;
+    border-radius: 9px;
+    outline: none;
+    background: #fffffa;
+    color: #101314;
+    font-size: 15px;
+    transition: 0.2s ease;
+}
+
+.input-wrapper input::placeholder {
+    color: #777d7e;
+}
+
+.input-wrapper input:focus {
+    border-color: #101314;
+    box-shadow:
+        0 0 0 2px rgba(16, 19, 20, 0.08);
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #555b5c;
+    font-size: 17px;
+    z-index: 2;
+}
+
+
+/* =========================
+   PASSWORD
+========================= */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper .input-wrapper {
+    margin-bottom: 0;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #555b5c;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.password-toggle:hover {
+    color: #101314;
+}
+
+
+/* =========================
+   FORGOT PASSWORD
+========================= */
+
+.forgot-password {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    margin-bottom: 19px;
+}
+
+.forgot-password button {
+    border: none;
+    background: none;
+    color: #555b5c;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.forgot-password button:hover {
+    color: #101314;
+}
+
+
+/* =========================
+   SIGN IN
+========================= */
+
+.signin-button {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 9px;
+    background: #101314;
+    color: #fffffa;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow:
+        0 5px 15px rgba(16, 19, 20, 0.15);
+    transition: 0.2s ease;
+}
+
+.signin-button:hover {
+    background: #252a2b;
+    transform: translateY(-1px);
+}
+
+
+/* =========================
+   DIVIDER
+========================= */
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 14px 0;
+}
+
+.divider span {
+    flex: 1;
+    height: 1px;
+    background: #c8cccb;
+}
+
+.divider p {
+    margin: 0;
+    color: #777d7e;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+
+/* =========================
+   SOCIAL BUTTONS
+========================= */
+
+.social-login-button {
+    position: relative;
+    width: 100%;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #101314;
+    border-radius: 9px;
+    background: #fffffa;
+    color: #101314;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.social-login-button:hover {
+    background: #f1f2ed;
+    border-color: #101314;
+}
+
+.social-icon {
+    position: absolute;
+    left: 42px;
+    font-size: 20px;
+}
+
+
+/* =========================
+   GOOGLE LOGIN
+========================= */
+
+/* =========================
+   GOOGLE LOGIN
+========================= */
+
+.google-login-wrapper {
+    position: relative;
+    width: 100%;
+    height: 46px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================
+   CUSTOM VISUAL BUTTON
+========================= */
+
+.custom-google-button {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #101314;
+    border-radius: 9px;
+
+    background: #fffffa;
+    color: #101314;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    box-sizing: border-box;
+
+    pointer-events: none;
+
+    transition: 0.2s ease;
+}
+
+
+.google-logo {
+    position: absolute;
+    left: 15px;
+
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+.custom-google-button span {
+    pointer-events: none;
+}
+
+
+/* =========================
+   GOOGLE AUTH OVERLAY
+========================= */
+
+.google-auth-overlay {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 46px;
+
+    z-index: 5;
+
+    opacity: 0.01;
+
+    overflow: hidden;
+
+    pointer-events: auto;
+}
+
+
+.google-auth-overlay > div {
+    width: 100% !important;
+    height: 46px !important;
+
+    max-width: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+
+.google-auth-overlay iframe {
+    width: 100% !important;
+    height: 46px !important;
+
+    max-width: none !important;
+
+    display: block !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+
+/* =========================
+   DARK MODE
+========================= */
+
+html.dark .custom-google-button {
+    background: #101314;
+    border-color: #fffffa;
+    color: #fffffa;
+}
+
+.google-login-wrapper {
+    width: 100%;
+    margin: 0;
+}
+
+.custom-google-button {
+    position: relative;
+    width: 100%;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #101314;
+    border-radius: 9px;
+
+    background: #fffffa;
+    color: #101314;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.custom-google-button:hover {
+    background: #f1f2ed;
+    border-color: #101314;
+}
+
+.google-icon {
+    position: absolute;
+    left: 15px;
+
+    width: 20px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 19px;
+    font-weight: 700;
+}
+
+
+/* =========================
+   DARK MODE GOOGLE
+========================= */
+
+html.dark .custom-google-button {
+    background: #101314;
+    border-color: #fffffa;
+    color: #fffffa;
+}
+
+html.dark .custom-google-button:hover {
+    background: #181c1d;
+    border-color: #fffffa;
+}
+
+/* =========================
+   SIGN UP
+========================= */
+
+.signup-text {
+    margin: 19px 0 0;
+    color: #555b5c;
+    font-size: 14px;
+}
+
+.signup-text button {
+    margin-left: 5px;
+    border: none;
+    background: none;
+    color: #101314;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.signup-text button:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================
+   TERMS
+========================= */
+
+.terms {
+    margin-top: 20px;
+    color: #777d7e;
+    font-size: 11px;
+}
+
+.terms a {
+    color: #555b5c;
+    text-decoration: underline;
+}
+
+.terms a:hover {
+    color: #101314;
+}
+
+
+/* =========================================================
+   DARK MODE
+========================================================= */
+
+html.dark,
+html.dark body,
+html.dark #root {
+    background: #101314;
+}
+
+html.dark .login-page {
+    background: #101314;
+    color: #fffffa;
+}
+
+
+/* HEADER */
+
+html.dark .brand {
+    color: #fffffa;
+}
+
+html.dark .brand-logo {
+    background: #fffffa;
+    border-color: #fffffa;
+    color: #101314;
+}
+
+html.dark .theme-button {
+    color: #fffffa;
+}
+
+
+/* HEADING */
+
+html.dark .login-section {
+    color: #fffffa;
+}
+
+html.dark .login-section h1 {
+    color: #fffffa;
+}
+
+html.dark .login-description {
+    color: #aeb4b3;
+}
+
+
+/* INPUTS */
+
+html.dark .input-wrapper input {
+    background: #101314;
+    border-color: #fffffa;
+    color: #fffffa;
+}
+
+html.dark .input-wrapper input::placeholder {
+    color: #8e9695;
+}
+
+html.dark .input-wrapper input:focus {
+    border-color: #fffffa;
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 250, 0.08);
+}
+
+html.dark .input-icon {
+    color: #aeb4b3;
+}
+
+
+/* PASSWORD */
+
+html.dark .password-toggle {
+    color: #aeb4b3;
+}
+
+html.dark .password-toggle:hover {
+    color: #fffffa;
+}
+
+
+/* FORGOT PASSWORD */
+
+html.dark .forgot-password button {
+    color: #aeb4b3;
+}
+
+html.dark .forgot-password button:hover {
+    color: #fffffa;
+}
+
+
+/* SIGN IN */
+
+html.dark .signin-button {
+    background: #fffffa;
+    color: #101314;
+    box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.35);
+}
+
+html.dark .signin-button:hover {
+    background: #e8e8e2;
+}
+
+
+/* DIVIDER */
+
+html.dark .divider span {
+    background: #3b4142;
+}
+
+html.dark .divider p {
+    color: #8e9695;
+}
+
+
+/* SOCIAL LOGIN */
+
+html.dark .social-login-button {
+    background: #101314;
+    border-color: #fffffa;
+    color: #fffffa;
+}
+
+html.dark .social-login-button:hover {
+    background: #181c1d;
+    border-color: #fffffa;
+}
+
+
+/* SIGN UP */
+
+html.dark .signup-text {
+    color: #aeb4b3;
+}
+
+html.dark .signup-text button {
+    color: #fffffa;
+}
+
+
+/* TERMS */
+
+html.dark .terms {
+    color: #747c7b;
+}
+
+html.dark .terms a {
+    color: #8e9695;
+}
+
+html.dark .terms a:hover {
+    color: #fffffa;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 700px) {
+
+    .login-header {
+        top: 15px;
+        left: 20px;
+        right: 20px;
+    }
+
+    .brand {
+        font-size: 29px;
+    }
+
+    .brand-logo {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        font-size: 21px;
+    }
+
+    .login-content {
+        padding-top: 80px;
+    }
+
+    .login-section h1 {
+        font-size: 34px;
+    }
+
+    .login-description {
+        font-size: 14px;
+    }
+
+    .login-description br {
+        display: none;
+    }
+}
+
+
+@media (max-height: 700px) {
+
+    .login-section h1 {
+        font-size: 34px;
+    }
+
+    .login-description {
+        margin: 8px 0 14px;
+        font-size: 14px;
+    }
+
+    .input-wrapper {
+        height: 43px;
+        margin-bottom: 15px;
+    }
+
+    .forgot-password {
+        margin-top: 8px;
+        margin-bottom: 14px;
+    }
+
+    .signin-button {
+        height: 43px;
+    }
+
+    .divider {
+        margin: 10px 0;
+    }
+
+    .social-login-button {
+        height: 43px;
+    }
+
+    .signup-text {
+        margin-top: 14px;
+    }
+
+    .terms {
+        margin-top: 13px;
+    }
+}
+
+
+/* =========================
+   RESET PASSWORD SPACING
+========================= */
+
+.password-hint {
+    padding-top: 8px;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.password-hint + .password-wrapper {
+    margin-top: 10px;
+}
+
+.password-wrapper + .signin-button {
+    margin-top: 15px;
+}
+
