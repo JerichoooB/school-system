@@ -1,6 +1,6 @@
-# Resume checkpoint — user paused work
+# Resume checkpoint — live verification completed
 
-Saved implementation and grading fixes: e5ab7f38 on main (preceded by ac5ab3f3 and 098a12ab). Latest user request is to save and continue later. Do not resume testing until they ask.
+Implementation and grading fixes are saved on main. The user resumed work and requested another live test after configuring CRON_SECRET. Latest verification completed successfully on 2026-10-23.
 
 ## Completed
 
@@ -21,15 +21,23 @@ Saved implementation and grading fixes: e5ab7f38 on main (preceded by ac5ab3f3 a
 - Lowering maximum points now checks the original entered score, before late penalties.
 - Regression tests passed locally. Code is committed/pushed in e5ab7f38.
 
-## Resume here
+## Latest live verification
 
-1. Verify Vercel has deployed the grading fixes. The final post-deployment live regression run was NOT started because the user paused.
-2. Run the explicit live academic check with LIVE_VERIFY_GRADING_FIX=1 to verify the new archived-weight/original-score cases on Vercel and Neon. The ordinary 98-check live run already passed before these fixes; the extended run should add 7 HTTP assertions.
-3. Confirm every new test fixture is removed and save the resulting report.
+- Deployment check passed without SMOKE_SKIP_CRON: PostgreSQL, HTTPS login/session, role-scoped data, email configuration presence, CRON_SECRET presence, private Blob upload/download/deletion and anonymous denial, unauthorized job rejection, all 11 student browser routes, and logout revocation.
+- Extended live academic check passed **105 HTTP assertions**, including the archived-assessment weight and original-score regressions against the deployed app.
+- All temporary live accounts, files and academic records were removed successfully.
+- Lint and production build passed during this resumed session.
+- Earlier 404/405 responses came from a deployment that did not expose the current academic API. The latest deployment passes these checks.
+
+## Remaining operational verification
+
+- Verify an actual authenticated Vercel scheduled invocation; presence of CRON_SECRET and unauthorized request rejection do not prove scheduled execution or inbox delivery.
+- Verify real receipt of queued notification emails and Formspree support messages with the operator.
+- Confirm production recovery, Blob backup/retention and external uptime alerts in the provider accounts.
 
 ## Intentionally deferred / external limitations
 
-- User explicitly said to leave CRON_SECRET for later. It was absent in the deployed function during checks. Do not add CRON_SECCRET compatibility: the user canceled that idea; all alias code was reverted and never deployed.
+- User has now configured CRON_SECRET; deployed presence checks pass. No CRON_SECCRET compatibility was added. Actual scheduled execution remains unverified.
 - Deployment check supports SMOKE_SKIP_CRON=1 to report this omission as an explicit skip. This flag changes tests only, not production authentication/configuration.
 - Manual email queue logic, failures and retries pass isolated tests with mocked SMTP. Real receipt of new queued notifications and Formspree messages remains unverified in this run. Prior Gmail signup delivery was confirmed by the user.
 - Production Blob backup/retention and external uptime alerts still require operator account-level verification. Do not claim they were configured.
