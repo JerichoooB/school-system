@@ -1,6 +1,6 @@
 # School Hub
 
-React/Vite frontend and Node API functions deployed together on **Vercel**, with **Neon PostgreSQL** for accounts and sessions. Gmail SMTP (Nodemailer) or Resend delivers account emails; Formspree receives support requests. PHP, MySQL, Composer, and PHPMailer are no longer used.
+React/Vite frontend and Node API functions deployed together on **Vercel**, with **Neon PostgreSQL** for accounts, sessions, and school records. Gmail SMTP (Nodemailer) or Resend delivers account emails; Formspree receives support requests. PHP, MySQL, Composer, and PHPMailer are no longer used.
 
 ## Local development
 
@@ -60,9 +60,11 @@ After deploy, run `npm run db:migrate`, start `npm run dev`, and run `npm run te
    | `MAIL_FROM` | Required only for Resend: sender on a verified domain, e.g. `School Hub <accounts@school.example>`. |
    | `GOOGLE_CLIENT_ID` | Server-side Google OAuth web client ID, if Google sign-in is enabled. |
    | `VITE_GOOGLE_CLIENT_ID` | Same public OAuth client ID; omit to hide Google sign-in. |
+   | `BLOB_READ_WRITE_TOKEN` | Secret read-write token for a connected private Vercel Blob store. |
+   | `CRON_SECRET` | Secret used by the daily `/api/jobs` cron. |
    | `VITE_FORMSPREE_ENDPOINT` | Public support form endpoint; defaults to `https://formspree.io/f/xgaawjzg`. |
 
-4. Apply `db/migrations/001_auth.sql` once using the Neon SQL Editor, or run `npm run db:migrate` from a trusted terminal with `DATABASE_URL` securely configured. The migration is repeatable. Migrations are intentionally separate from the Vercel build so preview builds cannot modify production databases.
+4. Apply every ordered SQL migration in `db/migrations`, or run `npm run db:migrate` from a trusted terminal with `DATABASE_URL` securely configured. The migration is repeatable. Migrations are intentionally separate from the Vercel build so preview builds cannot modify production databases.
 5. For Gmail follow the Gmail SMTP section below. For Resend, verify the sender domain. Confirm the support recipient in Formspree and restrict the form to your deployed domain in its settings. Add the exact deployed origin to Google's authorized JavaScript origins if enabling Google sign-in. Preview deployments need their own matching `APP_URL` and OAuth origins.
 6. Deploy, then verify signup → email code → sign-in, page refresh, sign-out, and password reset on the actual HTTPS domain. Check support submission delivery separately. Changing `VITE_*` settings requires a new build. Never put secrets in git, browser code, logs, or chat.
 
@@ -72,7 +74,9 @@ Neon hosts the database; Vercel hosts the website and API. Resend and Formspree 
 
 API endpoints: `register`, `verify-email`, `resend-verification`, `login`, `google-login`, `session` (GET), `logout`, `forgot-password`, and `reset-password`, all under `/api/`. The remaining endpoints accept POST. Requests are same-origin; unrelated origins are rejected. PostgreSQL stores password hashes, hashed verification/reset/session tokens, expiration times, and shared rate limits. Session cookies are HttpOnly, SameSite=Lax, and Secure in production. Password reset invalidates all existing sessions. Every future protected data API must validate the server session; the React route guard is only navigation UI.
 
-The existing dashboard still shows demo data. Its visual redesign and school-domain tables/APIs are intentionally pending design approval. Authentication tables are not a complete school records schema.
+The approved forest-green/cream school workspace now connects all 13 screens to PostgreSQL. Administrators manage academic structure, accounts, enrollment and policies; teachers manage assigned classes, attendance, coursework and results; students see their own records and submit work. New accounts default to student. Create the first administrator with `npm run admin:grant -- verified-account-email`.
+
+`/api/school` exposes authorized records and validated mutations. `/api/file` proxies private Vercel Blob uploads/downloads with ownership and enrollment checks. `/api/jobs` handles queued account notifications/reminders (cron Bearer token or an authenticated administrator). `/api/health` checks database availability. See [operations and deployment](docs/OPERATIONS.md) and the [implementation checklist](docs/IMPLEMENTATION.md) for service setup, limits, backup/recovery and validation status.
 
 ## Existing MySQL data
 
@@ -97,7 +101,7 @@ DELETE FROM auth_limits WHERE expires_at < now();
 
 ## Live Neon validation
 
-The requested `production` branch was verified with `neon config plan` and `neon deploy`; no infrastructure changes were needed. Deploy pulled `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, and `NEON_BRANCH` into ignored `.env.local`. The authentication migration completed, and the running Vite/Node app passed `npm run test:smoke` against live Neon (database insert, login, session lookup, logout and revocation). Smoke fixtures were removed. Build and lint passed. This does not deploy the frontend/API to Vercel. The Vercel deployment at schoolhub-ri.vercel.app is live; the user confirmed Google sign-in and dashboard access, with successful google-login/session runtime logs. Live account-email delivery remains pending the chosen Gmail sender settings below.
+The requested `production` branch was verified with `neon config plan` and `neon deploy`; no infrastructure changes were needed. Deploy pulled `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, and `NEON_BRANCH` into ignored `.env.local`. The authentication migration completed, and the running Vite/Node app passed `npm run test:smoke` against live Neon (database insert, login, session lookup, logout and revocation). Smoke fixtures were removed. Build and lint passed. This does not deploy the frontend/API to Vercel. The Vercel deployment at schoolhub-ri.vercel.app is live; the user confirmed Google sign-in and dashboard access, with successful google-login/session runtime logs. The user confirmed Gmail signup-email delivery after configuring the sender settings below. New file and background-job functionality requires separate deployed validation.
 
 ## Google sign-in for schoolhub-ri.vercel.app
 
@@ -146,8 +150,12 @@ The chosen sender option is Gmail SMTP through **Nodemailer**, compatible with t
    | `GMAIL_APP_PASSWORD` | The generated 16-character App password | Secret |
 
 4. Keep `APP_URL=https://schoolhub-ri.vercel.app`, the existing Neon connection variables, and the matching Google OAuth client IDs. Save and redeploy so the function reads the new mail settings.
-5. Test a fresh email/password signup, receive and submit the six-digit code, sign in, then request a reset and follow its link. Use an email address that is not already registered through Google sign-in: Google accounts intentionally use Google login instead of local password recovery. Check Spam as well as Inbox. A successful HTTP signup response means the SMTP server accepted the message; it does not guarantee inbox delivery.
+5. Test a fresh email/password signup, receive and submit the six-digit code, sign in, then request a reset and follow its link. Use an email address that is not already registered through Google sign-in: Google-only accounts use Google login instead of local password recovery. Verified local accounts may explicitly link a matching Google identity from Settings. Check Spam as well as Inbox. A successful HTTP signup response means the SMTP server accepted the message; it does not guarantee inbox delivery.
 
 Gmail requires no `MAIL_FROM`, Resend key or owned sending domain in this mode: messages are sent as **School Hub** from the authenticated Gmail address. The app connects to smtp.gmail.com on port 465 using verified TLS and finite timeouts; it normalizes spaces in Google's grouped App password. Raw SMTP errors/credentials are never exposed to clients. App passwords go into **Vercel server secrets**, not Codex's HTTPS network-secret placeholder mechanism, because SMTP needs the actual password. Gmail has account-specific sending limits and can restrict sign-ins from new servers; verify real delivery from Vercel before relying on it for users. If Google blocks this account or App passwords are unavailable, another compatible sender is needed.
 
-`tests/mail.test.js` tests Gmail config, Nodemailer's message composition, verified TLS settings and safe failures without sending real email. The API tests also exercise the full signup/verification/reset flow with the SMTP delivery boundary mocked. Live Gmail delivery is pending the sender's secure Vercel configuration.
+`tests/mail.test.js` tests Gmail config, Nodemailer's message composition, verified TLS settings and safe failures without sending real email. The API tests also exercise the full signup/verification/reset flow with the SMTP delivery boundary mocked. The user confirmed live signup-email delivery with the configured Gmail sender; new queued notifications still need their deployed delivery check.
+
+## School browser tests
+
+`npm run test:school:browser` starts its own app on port 5175 and exercises all 13 screens, administrator setup, teacher assignment publishing, student submission, released feedback, mobile navigation, and automated WCAG checks. Supply an isolated `TEST_DATABASE_URL` and install a trusted Playwright Chromium executable as above. `npm test` also covers academic authorization, capacity/timetable conflicts, private file permissions, rubrics, final grades, invitation acceptance, notification jobs and timezone conversion.

@@ -1,0 +1,16 @@
+BEGIN;
+CREATE INDEX IF NOT EXISTS enrollment_section_status_idx ON enrollments(section_id,status);
+CREATE INDEX IF NOT EXISTS assessments_section_idx ON assessments(section_id);
+CREATE INDEX IF NOT EXISTS assignment_deadline_idx ON assignments(due_at);
+CREATE INDEX IF NOT EXISTS submissions_student_idx ON submissions(student_id,submitted_at DESC);
+CREATE INDEX IF NOT EXISTS scores_student_idx ON scores(student_id,published);
+CREATE INDEX IF NOT EXISTS sessions_section_date_idx ON class_sessions(section_id,held_on);
+CREATE INDEX IF NOT EXISTS attendance_student_idx ON attendance(student_id,session_id);
+CREATE INDEX IF NOT EXISTS meetings_section_idx ON meetings(section_id,weekday);
+CREATE INDEX IF NOT EXISTS materials_section_idx ON materials(section_id);
+CREATE INDEX IF NOT EXISTS final_grades_student_idx ON final_grades(student_id,published);
+CREATE INDEX IF NOT EXISTS announcement_publish_idx ON announcements(section_id,publish_at DESC);
+CREATE INDEX IF NOT EXISTS files_section_idx ON files(section_id);
+CREATE INDEX IF NOT EXISTS email_jobs_pending_idx ON email_jobs(next_attempt_at,id) WHERE state IN ('pending','failed');
+CREATE INDEX IF NOT EXISTS grade_history_lookup_idx ON grade_history(assessment_id,student_id,created_at DESC);
+COMMIT;

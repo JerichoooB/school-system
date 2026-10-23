@@ -1,7 +1,7 @@
 import { test, before, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { randomBytes, generateKeyPairSync, sign } from 'node:crypto';
 import { chromium } from 'playwright';
 import { createServer as createViteServer } from 'vite';
@@ -30,7 +30,7 @@ before(async () => {
   delete process.env.GOOGLE_CLIENT_ID;
   delete process.env.VITE_GOOGLE_CLIENT_ID;
   ({ query, getPool } = await import('../server/db.js'));
-  await query(await readFile(new URL('../db/migrations/001_auth.sql', import.meta.url), 'utf8'));
+  for(const name of (await readdir(new URL('../db/migrations/',import.meta.url))).sort()) await query(await readFile(new URL(`../db/migrations/${name}`,import.meta.url),'utf8'));
   globalThis.fetch = (url, options) => {
     if (url === 'https://api.resend.com/emails') {
       emails.push(JSON.parse(options.body));
@@ -164,9 +164,9 @@ test('login and account browser flows', async t => {
     assert.equal(cookie.httpOnly, true);
     assert.equal(cookie.sameSite, 'Lax');
     await page.reload();
-    await page.locator('.dashboard-layout').waitFor();
+    await page.locator('.sh-app').waitFor();
     assert.ok(page.url().endsWith('/dashboard'));
-    await page.getByRole('button', { name: 'Logout', exact: true }).click();
+    await page.getByRole('button', { name: 'Log out', exact: true }).click();
     await page.waitForURL(`${base}/`);
     const response = await page.request.get(`${base}/api/session`);
     assert.equal(response.status(), 401);
@@ -258,9 +258,9 @@ test('login and account browser flows', async t => {
       assert.equal(await page.locator('.google-login-wrapper').evaluate(el => getComputedStyle(el).opacity), '1');
       assert.equal((await waitResponse('google-login', () => google.click())).status(), 200);
       await page.waitForURL(`${base}/dashboard`);
-      await page.locator('.dashboard-layout').waitFor();
+      await page.locator('.sh-app').waitFor();
       assert.equal((await page.request.get(`${base}/api/session`).then(r => r.json())).user.email, googleEmail);
-      await page.getByRole('button', { name: 'Logout', exact: true }).click();
+      await page.getByRole('button', { name: 'Log out', exact: true }).click();
       await page.waitForURL(`${base}/`);
     } finally {
       certificateMock.mock.restore();

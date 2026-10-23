@@ -32,3 +32,8 @@ dist-ssr
 
 # Obsolete PHP dependency leftovers
 vendor/
+
+# Database backups contain private account and school data
+*.dump
+*.backup
+backups/

@@ -1,51 +1,38 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ThemeContext } from "./theme.js";
 
 export function ThemeProvider({ children }) {
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
 
-    const [darkMode, setDarkMode] = useState(() => {
+    return savedTheme === "dark";
+  });
 
-        const savedTheme = localStorage.getItem("theme");
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
 
-        return savedTheme === "dark";
-    });
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
 
-
-    useEffect(() => {
-
-        if (darkMode) {
-
-            document.documentElement.classList.add("dark");
-
-            localStorage.setItem("theme", "dark");
-
-        } else {
-
-            document.documentElement.classList.remove("dark");
-
-            localStorage.setItem("theme", "light");
-
-        }
-
-    }, [darkMode]);
-
-
-    function toggleTheme() {
-
-        setDarkMode(prev => !prev);
-
+      localStorage.setItem("theme", "light");
     }
+  }, [darkMode]);
 
+  const toggleTheme = useCallback(() => setDarkMode((prev) => !prev), []);
+  const setAppearance = useCallback((mode) => setDarkMode(mode === "dark"), []);
 
-    return (
-        <ThemeContext.Provider
-            value={{
-                darkMode,
-                toggleTheme
-            }}
-        >
-            {children}
-        </ThemeContext.Provider>
-    );
+  return (
+    <ThemeContext.Provider
+      value={{
+        darkMode,
+        toggleTheme,
+        setAppearance,
+      }}
+    >
+      {children}
+    </ThemeContext.Provider>
+  );
 }

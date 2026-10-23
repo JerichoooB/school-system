@@ -13,13 +13,18 @@
     "db:migrate": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate.js",
     "test": "node --env-file-if-exists=.env.local --env-file-if-exists=.env --test tests/*.test.js",
     "test:smoke": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-postgres.js",
-    "test:browser": "node --test tests/browser-smoke.js"
+    "test:browser": "node --test tests/browser-smoke.js",
+    "admin:grant": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/admin.js",
+    "test:school:browser": "node --test tests/school-browser.js",
+    "db:backup": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/backup.js",
+    "test:deployment": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-deployment.js"
   },
   "dependencies": {
     "@neon/config": "^1.9.3",
     "@neon/env": "^1.6.4",
     "@neondatabase/serverless": "^1.2.0",
     "@react-oauth/google": "^0.13.5",
+    "@vercel/blob": "^2.8.2",
     "@vercel/functions": "^3.10.3",
     "bcryptjs": "^3.0.3",
     "google-auth-library": "^11.3.1",
@@ -38,6 +43,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "axe-core": "^4.14.0",
     "concurrently": "^10.0.6",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
