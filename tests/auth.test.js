@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createHash, generateKeyPairSync, sign } from 'node:crypto';
 import { OAuth2Client } from 'google-auth-library';
+import nodemailer from 'nodemailer';
 import handler from '../server/handler.js';
 import { getPool, query } from '../server/db.js';
 
@@ -19,6 +20,7 @@ before(async () => {
   if (!enabled) return;
   process.env.DATABASE_URL = url;
   process.env.APP_URL = 'http://localhost:5173';
+  process.env.MAIL_PROVIDER = 'resend';
   process.env.RESEND_API_KEY = 'test-only';
   process.env.MAIL_FROM = 'School Hub <test@example.test>';
   await query(await readFile(new URL('../db/migrations/001_auth.sql', import.meta.url), 'utf8'));
@@ -38,7 +40,7 @@ after(async () => {
   globalThis.fetch = originalFetch;
   if (server) await new Promise(resolve => server.close(resolve));
   if (enabled) await getPool().end();
-  for (const key of ['DATABASE_URL', 'APP_URL', 'RESEND_API_KEY', 'MAIL_FROM']) {
+  for (const key of ['DATABASE_URL', 'APP_URL', 'RESEND_API_KEY', 'MAIL_FROM', 'MAIL_PROVIDER']) {
     if (oldEnv[key] === undefined) delete process.env[key]; else process.env[key] = oldEnv[key];
   }
 });
@@ -190,5 +192,49 @@ test('deployment request formats, malformed payloads, expired reset tokens and s
     assert.match(cookie, /; SameSite=Lax/);
   } finally {
     if (oldNodeEnv === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = oldNodeEnv;
+  }
+});
+
+
+test('Gmail provider completes signup verification and password recovery through the API', { skip: !enabled }, async () => {
+  const keys = ['MAIL_PROVIDER', 'GMAIL_USER', 'GMAIL_APP_PASSWORD'];
+  const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+  process.env.MAIL_PROVIDER = 'gmail';
+  process.env.GMAIL_USER = 'sender@example.test';
+  process.env.GMAIL_APP_PASSWORD = 'abcd efgh ijkl mnop';
+  const delivered = [];
+  let failDelivery = false;
+  const smtpMock = mock.method(nodemailer, 'createTransport', () => ({
+    async sendMail(message) {
+      if (failDelivery) throw new Error('SMTP rejected test delivery');
+      delivered.push(message);
+      return { accepted: [message.to] };
+    },
+  }));
+  try {
+    const email = 'gmail-flow@example.test';
+    const password = 'Gmail flow password 123!';
+    assert.equal((await request('register', { name: 'Gmail Flow', email, password })).status, 200);
+    assert.equal(delivered.at(-1).from.address, 'sender@example.test');
+    assert.equal(delivered.at(-1).to, email);
+    const code = delivered.at(-1).text.match(/\b\d{6}\b/)[0];
+    assert.equal((await request('verify-email', { email, code })).status, 200);
+    const login = await request('login', { email, password });
+    assert.equal(login.status, 200);
+    assert.equal((await request('forgot-password', { email })).status, 200);
+    const token = delivered.at(-1).text.match(/token=([a-f0-9]{64})/)[1];
+    const changed = 'Changed Gmail password 456!';
+    assert.equal((await request('reset-password', { token, password: changed })).status, 200);
+    assert.equal((await request('session', undefined, login.cookie)).status, 401);
+    assert.equal((await request('login', { email, password: changed })).status, 200);
+    failDelivery = true;
+    const failed = await request('register', { name: 'Failure', email: 'gmail-failure@example.test', password });
+    assert.equal(failed.status, 502);
+    assert.equal((await query("SELECT id FROM users WHERE email='gmail-failure@example.test'")).rowCount, 0);
+  } finally {
+    smtpMock.mock.restore();
+    for (const key of keys) {
+      if (previous[key] === undefined) delete process.env[key]; else process.env[key] = previous[key];
+    }
   }
 });

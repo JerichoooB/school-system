@@ -24,6 +24,7 @@ const base = 'http://localhost:5174';
 before(async () => {
   process.env.DATABASE_URL = testUrl;
   process.env.APP_URL = base;
+  process.env.MAIL_PROVIDER = 'resend';
   process.env.RESEND_API_KEY = 'test-only';
   process.env.MAIL_FROM = 'School Hub <test@example.test>';
   delete process.env.GOOGLE_CLIENT_ID;
@@ -66,7 +67,7 @@ after(async () => {
     await query('DELETE FROM users WHERE email = $1', [email]);
     await getPool().end();
   }
-  for (const key of ['DATABASE_URL','APP_URL','RESEND_API_KEY','MAIL_FROM','GOOGLE_CLIENT_ID','VITE_GOOGLE_CLIENT_ID']) {
+  for (const key of ['DATABASE_URL','APP_URL','RESEND_API_KEY','MAIL_FROM','MAIL_PROVIDER','GOOGLE_CLIENT_ID','VITE_GOOGLE_CLIENT_ID']) {
     if (envBefore[key] === undefined) delete process.env[key]; else process.env[key] = envBefore[key];
   }
 });
