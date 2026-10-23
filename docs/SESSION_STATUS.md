@@ -1,3 +1,10 @@
+# Latest fix — profile avatar synchronization
+
+- Header, sidebar and profile banner now use the same current user's newest avatar record, falling back to the name initial when no avatar remains.
+- Upload/replacement/deletion already refresh workspace data; all three views now react to those updates, including across sidebar navigation.
+- Lint/build pass. All 13 academic browser checks pass; the new check exercises upload, replacement, navigation, deletion and fallback. Blob delivery is substituted in the isolated browser test; role-scoped metadata reads use the real local API/database.
+- Production bundle verification follows the push for this fix.
+
 # Latest checkpoint — navigation performance
 
 - Fixed repeated portal remounts: authenticated pages now share one protected layout and reuse in-memory workspace data during navigation.

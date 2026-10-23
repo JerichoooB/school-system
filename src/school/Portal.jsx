@@ -255,6 +255,12 @@ export default function Portal() {
   const { user } = data,
     isAdmin = user.role === "admin",
     isStaff = user.role !== "student";
+  const avatar = data.files.find(
+    (file) => file.purpose === "avatar" && same(file.owner_id, user.id),
+  );
+  const avatarContent = avatar ? (
+    <img key={avatar.id} src={`/api/file?id=${avatar.id}`} alt="" />
+  ) : user.name.slice(0, 1);
   const profile = data.profile[0] || {},
     zone = profile.timezone || "Asia/Manila";
   const grading =
@@ -520,18 +526,7 @@ export default function Portal() {
     return (
       <>
         <div className="sh-profile-banner">
-          <div className="sh-avatar large">
-            {data.files.some(
-              (f) => f.purpose === "avatar" && same(f.owner_id, user.id),
-            ) ? (
-              <img
-                src={`/api/file?id=${data.files.find((f) => f.purpose === "avatar" && same(f.owner_id, user.id)).id}`}
-                alt="Your avatar"
-              />
-            ) : (
-              user.name.slice(0, 1)
-            )}
-          </div>
+          <div className="sh-avatar large">{avatarContent}</div>
           <div>
             <h2>{user.name}</h2>
             <p>{user.email}</p>
@@ -2201,7 +2196,7 @@ export default function Portal() {
             Help & Support
           </Link>
           <div className="sh-user">
-            <div className="sh-avatar">{user.name.slice(0, 1)}</div>
+            <div className="sh-avatar">{avatarContent}</div>
             <span>
               {user.name}
               <small>{user.role}</small>
@@ -2243,7 +2238,7 @@ export default function Portal() {
               {data.notifications.some((n) => !n.read_at) && <i />}
             </button>
             <Link to="/profile" className="sh-avatar" aria-label="Your profile">
-              {user.name.slice(0, 1)}
+              {avatarContent}
             </Link>
           </div>
         </header>

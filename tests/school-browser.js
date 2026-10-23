@@ -278,6 +278,53 @@ test("approved school screens and role workflows work in a real browser", async 
       await page.getByText("09123456789", { exact: true }).waitFor();
     },
   );
+  await t.test("avatar upload, replacement and removal update profile, header and sidebar together", async () => {
+    const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64");
+    const fixtureIds = [];
+    // Substitute Blob delivery only; uploads refresh actual role-scoped database data.
+    await page.route("**/api/file**", async route => {
+      const req = route.request();
+      if (req.method() === "POST") {
+        const body = req.postDataJSON();
+        const file = (await query("INSERT INTO files(owner_id,purpose,pathname,name,content_type,bytes) VALUES($1,'avatar',$2,$3,'image/png',$4) RETURNING *", [users.student.id, `avatar-${randomBytes(8).toString("hex")}`, body.name, png.length])).rows[0];
+        fixtureIds.push(file.id);
+        await route.fulfill({json:{success:true,file}});
+      } else if (req.method() === "DELETE") {
+        const id = new URL(req.url()).searchParams.get("id");
+        await query("DELETE FROM files WHERE id=$1 AND owner_id=$2", [id, users.student.id]);
+        await route.fulfill({json:{success:true}});
+      } else {
+        await route.fulfill({contentType:"image/png",body:png});
+      }
+    });
+    try {
+      await open("profile");
+      for (const name of ["first-avatar.png", "replacement-avatar.png"]) {
+        const refreshed = page.waitForResponse(r => r.url() === `${base}/api/school` && r.request().method() === "GET");
+        await page.getByLabel("Upload profile photos", {exact:true}).setInputFiles({name,mimeType:"image/png",buffer:png});
+        await refreshed;
+        const src = `/api/file?id=${fixtureIds.at(-1)}`;
+        for (const selector of [".sh-profile-banner .sh-avatar img", ".sh-user .sh-avatar img", 'a[aria-label="Your profile"] img']) {
+          await page.locator(`${selector}[src="${src}"]`).waitFor();
+          await page.waitForFunction(sel => document.querySelector(sel)?.naturalWidth > 0, selector);
+        }
+      }
+      await page.locator(".sh-sidebar").getByRole("link", {name:"Settings",exact:true}).click();
+      assert.equal(await page.locator('.sh-user .sh-avatar img').getAttribute("src"), `/api/file?id=${fixtureIds.at(-1)}`);
+      await page.locator(".sh-sidebar").getByRole("link", {name:"Profile",exact:true}).click();
+      for (const name of ["replacement-avatar.png", "first-avatar.png"]) {
+        const refreshed = page.waitForResponse(r => r.url() === `${base}/api/school` && r.request().method() === "GET");
+        await page.getByRole("button", {name:`Delete ${name}`,exact:true}).click();
+        await refreshed;
+      }
+      await page.waitForFunction(() => document.querySelectorAll(".sh-avatar img").length === 0);
+      assert.equal(await page.locator('.sh-user .sh-avatar').textContent(), "s");
+      assert.equal(await page.locator('a[aria-label="Your profile"]').textContent(), "s");
+    } finally {
+      await page.unroute("**/api/file**");
+      await query("DELETE FROM files WHERE id=ANY($1::bigint[])", [fixtureIds]);
+    }
+  });
   await signout();
   await login("teacher");
   await t.test("teacher releases a score for the submitted work", async () => {
