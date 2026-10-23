@@ -2061,6 +2061,15 @@ export default function Portal() {
                   col("state", "State"),
                   col("attempts", "Attempts"),
                   col("next_attempt_at", "Next attempt"),
+                  col("actions", "Actions", (job) =>
+                    job.state === "failed" ? (
+                      <button
+                        onClick={() => act("retry_email", { id: job.id })}
+                      >
+                        Retry delivery
+                      </button>
+                    ) : null,
+                  ),
                 ]}
               />
             </Card>

@@ -529,8 +529,10 @@ test(
           CRON_SECRET: "test-cron-only",
         });
         const delivered = [];
+        let failDelivery = false;
         const smtp = mock.method(nodemailer, "createTransport", () => ({
           async sendMail(message) {
+            if (failDelivery) throw new Error("Simulated SMTP failure");
             delivered.push(message);
             return { accepted: [message.to] };
           },
@@ -569,6 +571,39 @@ test(
           assert.ok(result.sent > 0);
           assert.equal(result.failed, 0);
           assert.ok(delivered.length > 1);
+          const job = (
+            await query(
+              "INSERT INTO email_jobs(user_id,subject,content,dedupe_key) VALUES($1,'Retry check','Test only','retry-check') RETURNING id",
+              [accounts.student.id],
+            )
+          ).rows[0];
+          failDelivery = true;
+          const failed = await fetch(`${base}/api/jobs`, {
+            method: "POST",
+            headers: { Cookie: accounts.admin.cookie },
+          });
+          assert.equal((await failed.json()).failed, 1);
+          assert.equal(
+            (await query("SELECT state FROM email_jobs WHERE id=$1", [job.id]))
+              .rows[0].state,
+            "failed",
+          );
+          assert.equal(
+            (await api("student", "retry_email", { id: job.id })).status,
+            403,
+          );
+          await create("admin", "retry_email", { id: job.id });
+          failDelivery = false;
+          const retry = await fetch(`${base}/api/jobs`, {
+            method: "POST",
+            headers: { Cookie: accounts.admin.cookie },
+          });
+          assert.equal((await retry.json()).sent, 1);
+          assert.equal(
+            (await query("SELECT state FROM email_jobs WHERE id=$1", [job.id]))
+              .rows[0].state,
+            "sent",
+          );
         } finally {
           smtp.mock.restore();
           for (const key of names) {

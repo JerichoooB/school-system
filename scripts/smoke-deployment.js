@@ -11,6 +11,7 @@ if (!base.startsWith("https://") && !base.startsWith("http://localhost:"))
 const email = `deployment-${randomBytes(12).toString("hex")}@example.invalid`,
   password = randomBytes(24).toString("base64url") + "!a";
 let userId, cookie, fileId;
+const configurationFailures = [];
 async function request(
   path,
   { method = "GET", body, authenticated = true } = {},
@@ -72,13 +73,12 @@ try {
       true,
       "Account email configuration is missing.",
     );
-    assert.equal(
-      state.services.cronConfigured,
-      true,
-      "CRON_SECRET is missing on the deployed function.",
-    );
+    if (!state.services.cronConfigured)
+      configurationFailures.push(
+        "CRON_SECRET is missing on the deployed function.",
+      );
     console.log(
-      "PASS deployed email and cron configuration presence (not an inbox-delivery test)",
+      "PASS deployed email configuration presence; cron checked separately (not an inbox-delivery test)",
     );
   } finally {
     await query("UPDATE users SET role='student' WHERE id=$1", [userId]);
@@ -123,10 +123,48 @@ try {
     const browser = await chromium.launch({
       executablePath: process.env.BROWSER_EXECUTABLE || undefined,
       headless: true,
+      proxy: process.env.HTTPS_PROXY
+        ? { server: process.env.HTTPS_PROXY }
+        : undefined,
       args: ["--no-sandbox", "--disable-dev-shm-usage"],
     });
     try {
       const page = await browser.newPage();
+      if (process.env.HTTPS_PROXY) {
+        // Chromium does not inherit Node's trusted proxy CA bundle. Route through
+        // Node's TLS-verified fetch instead of weakening browser certificate checks.
+        await page.route("https://**/*", async (route) => {
+          try {
+            const req = route.request(),
+              headers = await req.allHeaders();
+            delete headers["accept-encoding"];
+            const upstream = await fetch(req.url(), {
+              method: req.method(),
+              headers,
+              body: ["GET", "HEAD"].includes(req.method())
+                ? undefined
+                : req.postDataBuffer(),
+              redirect: "manual",
+              signal: AbortSignal.timeout(30000),
+            });
+            const responseHeaders = Object.fromEntries(upstream.headers);
+            for (const key of [
+              "content-encoding",
+              "content-length",
+              "transfer-encoding",
+            ])
+              delete responseHeaders[key];
+            await route.fulfill({
+              status: upstream.status,
+              headers: responseHeaders,
+              body: Buffer.from(await upstream.arrayBuffer()),
+            });
+          } catch {
+            await route.abort("failed");
+          }
+        });
+      }
+
       const [name, value] = cookie.split("=");
       await page.context().addCookies([
         {
@@ -151,10 +189,13 @@ try {
         "settings",
         "help",
       ]) {
-        await page.goto(`${base}/${path}`);
+        await page.goto(`${base}/${path}`, { waitUntil: "domcontentloaded" });
         await page.locator(".sh-main h1").waitFor();
+        console.log(`PASS deployed page: ${path}`);
       }
-      console.log("PASS deployed browser navigation across 11 student screens");
+      console.log(
+        "PASS deployed browser navigation across 11 student screens (TLS-verified network transport)",
+      );
     } finally {
       await browser.close();
     }
@@ -163,6 +204,13 @@ try {
   assert.equal((await request("session")).status, 401);
   cookie = null;
   console.log("PASS logout revokes the production test session");
+  if (configurationFailures.length) {
+    console.error(
+      "Configuration checks still failing:",
+      configurationFailures.join(" "),
+    );
+    process.exitCode = 1;
+  }
 } catch (error) {
   console.error("Deployment check failed:", error.message);
   process.exitCode = 1;

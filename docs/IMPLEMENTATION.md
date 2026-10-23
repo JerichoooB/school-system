@@ -36,10 +36,14 @@ An unchecked item is not complete. Production service configuration and school-p
 Online exam-taking and a separate in-app support ticket system were conditional alternatives in the specification; the approved designs show scheduled exams/results and Formspree support. They should not be claimed as implemented by those screens.
 
 ## Release checks still tracked separately
-- [ ] Deployed Vercel build verified against the migrated Neon database
-- [ ] Live private Blob upload/download/deletion verified after deployment
+- [x] Deployed Vercel API and browser navigation verified against the migrated Neon database
+- [x] Live private Blob upload/download/deletion verified after deployment, including anonymous access denial
 - [ ] Cron secret and deployed scheduling verified in the Vercel account
 - [ ] Production inbox delivery of new queued notifications verified (SMTP contract tests pass; prior signup delivery was confirmed by the user)
 - [ ] Production Neon restore retention, Blob retention/backup and external uptime alerts configured by the operator
 
 The checked implementation items refer to code and local/isolated validation. They do not substitute for these account-level operational checks. The application currently supports English and light/dark appearance; it does not expose untranslated language choices. Exam-taking and in-app ticketing remain conditional alternatives, not the scheduled-exam/Formspree workflows selected here.
+
+Live API/Blob checks were performed against schoolhub-ri.vercel.app after commit 098a12ab deployed. Unique temporary test accounts and files were removed. The deployed function reported CRON_SECRET absent; the operator was asked to select Production and redeploy. Browser testing through the cloud proxy requires TLS-verified Node fetch transport because Chromium does not inherit its trust bundle.
+
+Release verification: 30 backend tests, 13 authentication browser checks, and 10 academic browser/accessibility checks passed. Live HTTPS checks passed sign-in/session, student data permissions, private Blob upload/download/deletion and anonymous denial, navigation across all 11 student routes, and logout revocation. All temporary live fixtures were removed. CRON_SECRET was the only configuration assertion still failing on that deployment.
