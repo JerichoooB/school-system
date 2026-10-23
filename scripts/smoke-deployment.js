@@ -205,6 +205,15 @@ try {
       console.log(
         "PASS deployed browser navigation across 11 student screens (TLS-verified network transport)",
       );
+      await page.locator('.sh-sidebar a[href="/settings"]').click();
+      const preferences = page.locator('.sh-card').filter({has:page.getByRole('heading',{name:'Preferences',exact:true})});
+      await preferences.getByRole('button',{name:'Edit preferences',exact:true}).click();
+      assert.equal(await page.getByRole('dialog').count(),0);
+      await preferences.getByLabel('Timezone',{exact:true}).fill('Asia/Singapore');
+      await preferences.getByRole('button',{name:'Save changes',exact:true}).click();
+      await preferences.getByRole('button',{name:'Edit preferences',exact:true}).waitFor();
+      await preferences.getByText('Asia/Singapore',{exact:true}).waitFor();
+      console.log('PASS deployed preferences save inline for the temporary test account');
     } finally {
       await browser.close();
     }

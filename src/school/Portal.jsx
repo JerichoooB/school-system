@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "../context/useTheme";
 import { schoolRequest, downloadCSV } from "./api";
-import { Card, Empty, Stat, Badge, Table, FormDialog } from "./ui";
+import { Card, Empty, Stat, Badge, Table, FormDialog, EditableSection } from "./ui";
 import "./school.css";
 import Files from "./Files";
 import Calendar from "./Calendar";
@@ -1004,6 +1004,7 @@ export default function Portal() {
     return (
       <>
         <GradeTools
+          onSave={save}
           data={data}
           edit={edit}
           isStaff={isStaff}
@@ -1811,45 +1812,17 @@ export default function Portal() {
     return (
       <>
         <div className="sh-grid">
-          <Card
-            title="Preferences"
-            action={
-              <button
-                onClick={() =>
-                  edit(
-                    "preferences",
-                    "Your preferences",
-                    [
-                      field("timezone", "Timezone", "text", {
-                        help: "For example: Asia/Manila",
-                      }),
-                      options("theme", "Appearance", ["light", "dark"]),
-                      field(
-                        "notify_assignments",
-                        "Assignment notifications",
-                        "checkbox",
-                      ),
-                      field(
-                        "notify_announcements",
-                        "Announcement notifications",
-                        "checkbox",
-                      ),
-                      field("notify_grades", "Grade notifications", "checkbox"),
-                    ],
-                    {
-                      timezone: zone,
-                      theme: darkMode ? "dark" : "light",
-                      notify_assignments: profile.notify_assignments ?? true,
-                      notify_announcements:
-                        profile.notify_announcements ?? true,
-                      notify_grades: profile.notify_grades ?? true,
-                    },
-                  )
-                }
-              >
-                Edit preferences
-              </button>
-            }
+          <EditableSection
+            title="Preferences" label="Edit preferences"
+            fields={[
+              field("timezone", "Timezone", "text", { help: "For example: Asia/Manila" }),
+              options("theme", "Appearance", ["light", "dark"]),
+              field("notify_assignments", "Assignment notifications", "checkbox"),
+              field("notify_announcements", "Announcement notifications", "checkbox"),
+              field("notify_grades", "Grade notifications", "checkbox"),
+            ]}
+            initial={{timezone: zone, theme: darkMode ? "dark" : "light", notify_assignments: profile.notify_assignments ?? true, notify_announcements: profile.notify_announcements ?? true, notify_grades: profile.notify_grades ?? true}}
+            onSave={(values) => save("preferences", values)}
           >
             <dl>
               <dt>Timezone</dt>
@@ -1863,7 +1836,7 @@ export default function Portal() {
               {darkMode ? <Sun size={16} /> : <Moon size={16} />}Switch
               appearance
             </button>
-          </Card>
+          </EditableSection>
           <Card title="Account & security">
             <p>
               {user.auth_provider === "google"
@@ -1871,26 +1844,19 @@ export default function Portal() {
                 : "Keep your password private and unique."}
             </p>
             {user.auth_provider === "local" && (
-              <button
-                onClick={() =>
-                  setDialog({
-                    title: "Change password",
-                    fields: [
-                      field("current_password", "Current password", "password"),
-                      field("password", "New password", "password", {
-                        maxLength: 72,
-                      }),
-                    ],
-                    initial: {},
-                    onSave: async (values) => {
-                      await schoolRequest("password", values);
-                      navigate("/");
-                    },
-                  })
-                }
-              >
-                Change password
-              </button>
+              <EditableSection card={false} title="Password" label="Change password"
+                fields={[
+                  field("current_password", "Current password", "password"),
+                  field("password", "New password", "password", {maxLength:72}),
+                  field("confirm_password", "Confirm new password", "password", {maxLength:72}),
+                ]}
+                initial={{}}
+                onSave={async ({confirm_password, ...values}) => {
+                  if (values.password !== confirm_password) throw new Error("New passwords do not match.");
+                  await schoolRequest("password", values);
+                  navigate("/");
+                }}
+              />
             )}
             <h3>Google sign-in</h3>
             {user.google_linked ? (
@@ -1947,31 +1913,13 @@ export default function Portal() {
         </div>
         {isAdmin && (
           <>
-            <Card
-              title="School policies"
-              action={
-                <button
-                  onClick={() =>
-                    edit(
-                      "school_settings",
-                      "School settings",
-                      [
-                        field("name", "School name"),
-                        field("timezone", "School timezone"),
-                        field(
-                          "attendance_threshold",
-                          "Attendance threshold (%)",
-                          "number",
-                          { min: 0, max: 100 },
-                        ),
-                      ],
-                      school,
-                    )
-                  }
-                >
-                  Edit school settings
-                </button>
-              }
+            <EditableSection title="School policies" label="Edit school settings"
+              fields={[
+                field("name", "School name"),
+                field("timezone", "School timezone"),
+                field("attendance_threshold", "Attendance threshold (%)", "number", {min:0,max:100}),
+              ]}
+              initial={school} onSave={(values) => save("school_settings", values)}
             >
               <dl>
                 <dt>Name</dt>
@@ -1981,7 +1929,7 @@ export default function Portal() {
                 <dt>Attendance threshold</dt>
                 <dd>{school.attendance_threshold}%</dd>
               </dl>
-            </Card>
+            </EditableSection>
             <Card title="Account administration">
               <Table
                 rows={data.people}
@@ -2511,7 +2459,6 @@ function Help({ name, email, articles, isAdmin, edit, files, onChanged }) {
   const [search, setSearch] = useState(""),
     [status, setStatus] = useState(""),
     [busy, setBusy] = useState(false);
-  const faqs = articles.map((a) => [a.title, a.content]);
   async function send(e) {
     e.preventDefault();
     setBusy(true);
@@ -2628,34 +2575,21 @@ function Help({ name, email, articles, isAdmin, edit, files, onChanged }) {
             )
           }
         >
-          {faqs
-            .filter((f) =>
-              f.join(" ").toLowerCase().includes(search.toLowerCase()),
-            )
-            .map(([q, a]) => (
-              <details className="sh-faq" key={q}>
-                <summary>{q}</summary>
-                <p>{a}</p>
-                {isAdmin && (
-                  <button
-                    onClick={() => {
-                      const article = articles.find((item) => item.title === q);
-                      edit(
-                        "help_articles",
-                        "Edit help article",
-                        [
-                          field("title", "Title"),
-                          field("content", "Answer", "textarea"),
-                          field("category", "Category"),
-                          field("published", "Publish article", "checkbox"),
-                        ],
-                        article,
-                      );
-                    }}
-                  >
-                    Edit article
-                  </button>
-                )}
+          {articles
+            .filter((article) => `${article.title} ${article.content}`.toLowerCase().includes(search.toLowerCase()))
+            .map((article) => (
+              <details className="sh-faq" key={article.id}>
+                <summary>{article.title}</summary>
+                <EditableSection card={false} title="Help article" label="Edit article" canEdit={isAdmin}
+                  fields={[
+                    field("title", "Title"), field("content", "Answer", "textarea"),
+                    field("category", "Category"), field("published", "Publish article", "checkbox"),
+                  ]}
+                  initial={article}
+                  onSave={async (values) => { await schoolRequest("help_articles",values); await onChanged(); }}
+                >
+                  <p>{article.content}</p>
+                </EditableSection>
               </details>
             ))}
         </Card>

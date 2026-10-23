@@ -982,3 +982,9 @@
 .dark .sh-start { color: #edf4ee; }
 .dark .sh-start p { color: #b0c0b7; }
 .dark .sh-start a { color: #a9d8b9; }
+.sh-inline-editor { padding: 4px 0; }
+.sh-inline-editor footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--line); padding-top: 18px; margin-top: 20px; }
+.sh-inline-section { margin: 14px 0; }
+.sh-form label.sh-check { flex-direction: row; align-items: center; gap: 10px; }
+.sh-form label.sh-check input { width: 18px; height: 18px; flex-shrink: 0; }
+@media (max-width: 530px) { .sh-inline-editor footer button { flex: 1; } }

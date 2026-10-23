@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { zonedISO, zonedInput } from "../../shared/time";
 import { X, Search, ChevronLeft, ChevronRight, Inbox } from "lucide-react";
 export function Empty({ children = "No records yet." }) {
@@ -144,11 +144,23 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
     </>
   );
 }
-export function FormDialog({ title, fields, initial = {}, onClose, onSave }) {
+export function EditableSection({ title, label, fields, initial, onSave, children, canEdit = true, card = true }) {
+  const [editing, setEditing] = useState(false);
+  const action = canEdit && !editing && <button onClick={() => setEditing(true)}>{label || `Edit ${title.toLowerCase()}`}</button>;
+  const content = editing ? (
+    <FormDialog inline title={title} fields={fields} initial={initial} onSave={onSave} onClose={() => setEditing(false)} />
+  ) : children;
+  return card ? <Card title={title} action={action}>{content}</Card> : (
+    <div className="sh-inline-section">{action}{content}</div>
+  );
+}
+export function FormDialog({ title, fields, initial = {}, onClose, onSave, inline = false }) {
   const modal = useRef(null);
+  const titleId = useId();
+  const Container = inline ? "section" : "dialog";
   useEffect(() => {
-    modal.current?.showModal();
-  }, []);
+    if (!inline) modal.current?.showModal();
+  }, [inline]);
   const [values, setValues] = useState(() =>
       Object.fromEntries(
         Object.entries(initial).map(([k, v]) => {
@@ -190,22 +202,23 @@ export function FormDialog({ title, fields, initial = {}, onClose, onSave }) {
   }
   return (
     <div
-      className="sh-overlay"
+      className={inline ? "sh-inline-editor" : "sh-overlay"}
       onClick={(e) => {
-        if (e.target === e.currentTarget && !busy) onClose();
+        if (!inline && e.target === e.currentTarget && !busy) onClose();
       }}
     >
-      <dialog
+      <Container
         ref={modal}
-        className="sh-dialog"
-        aria-labelledby="dialog-title"
+        className={inline ? "sh-form" : "sh-dialog"}
+        aria-label={inline ? `Edit ${title.toLowerCase()}` : undefined}
+        aria-labelledby={inline ? undefined : titleId}
         onCancel={(e) => {
           e.preventDefault();
           if (!busy) onClose();
         }}
       >
-        <header>
-          <h2 id="dialog-title">{title}</h2>
+        {!inline && <header>
+          <h2 id={titleId}>{title}</h2>
           <button
             type="button"
             aria-label="Close dialog"
@@ -214,8 +227,8 @@ export function FormDialog({ title, fields, initial = {}, onClose, onSave }) {
           >
             <X />
           </button>
-        </header>
-        <form onSubmit={submit}>
+        </header>}
+        <form onSubmit={submit} aria-label={inline ? `Edit ${title.toLowerCase()}` : undefined}>
           {fields.map((f) => (
             <label
               key={f.key}
@@ -308,7 +321,7 @@ export function FormDialog({ title, fields, initial = {}, onClose, onSave }) {
             </button>
           </footer>
         </form>
-      </dialog>
+      </Container>
     </div>
   );
 }

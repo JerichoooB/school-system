@@ -1,3 +1,11 @@
+# Latest update — inline editing for settings and simple sections
+
+- Preferences, school policies and grading policy now edit directly inside their cards with Save/Cancel; password change edits within Account & security. Existing help articles edit within the expanded article.
+- Reusable EditableSection uses the same fields, serialization, validation and API authorization as existing dialogs. Dialogs remain available for other workflows. Inline fields preserve draft values on errors, discard on Cancel and close after successful save. Password confirmation checks locally before server submission.
+- Lint/build and all 15 academic browser checks pass, including inline settings validation/cancel/persistence, password mismatch, grading policy, help article updates, old dialog flows, profile/avatar, mobile and light/dark accessibility.
+- Deployment smoke now saves preferences for its unique temporary account through the inline editor and cleans up that account afterward.
+- Production verification pending deployment of this update.
+
 # Latest update — whole-app UI polish
 
 - Refined all 13 portal pages through shared typography, ivory/sage surfaces, consistent cards, table headers/row states, page icons, controls, form actions, tabs, files, calendars and empty states.

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Card, Table, Badge } from "./ui";
+import { Card, Table, Badge, EditableSection } from "./ui";
 import { schoolRequest } from "./api";
 const field = (key, label, type = "text", extra = {}) => ({
   key,
@@ -17,7 +17,7 @@ const choice = (key, label, values) =>
     options: values.map((v) => ({ value: v, label: v })),
   });
 const col = (key, label, render) => ({ key, label, render });
-export function GradeTools({ data, edit, isStaff, sectionLabel }) {
+export function GradeTools({ data, edit, isStaff, sectionLabel, onSave }) {
   const policy =
     data.school_settings.find((s) => s.key === "grading")?.value || {};
   const sections = data.sections
@@ -102,7 +102,18 @@ export function GradeTools({ data, edit, isStaff, sectionLabel }) {
           />
         </Card>
       )}
-      <Card title="School grading scale">
+      <EditableSection title="School grading scale" label="Edit grading policy"
+        canEdit={data.user.role === "admin"}
+        fields={[
+          field("bands", "Grade bands (JSON)", "textarea", {help:'Example: [{"minimum":90,"letter":"A","gpa":4},{"minimum":0,"letter":"F","gpa":0}]'}),
+          field("late_penalty_percent", "Late penalty (% of maximum points)", "number", {min:0,max:100}),
+          field("missing_as_zero", "Treat unscored assessments as zero at finalization", "checkbox"),
+          field("late_counts_present", "Late counts as attended", "checkbox"),
+          field("exclude_excused", "Exclude excused attendance from percentages", "checkbox"),
+        ]}
+        initial={{...policy,bands:JSON.stringify(policy.bands,null,2)}}
+        onSave={(values) => onSave("grading_policy",values)}
+      >
         <Table
           rows={policy.bands || []}
           search={false}
@@ -112,46 +123,7 @@ export function GradeTools({ data, edit, isStaff, sectionLabel }) {
             col("gpa", "GPA"),
           ]}
         />
-        {data.user.role === "admin" && (
-          <button
-            onClick={() =>
-              edit(
-                "grading_policy",
-                "Grading and attendance policy",
-                [
-                  field("bands", "Grade bands (JSON)", "textarea", {
-                    help: 'Example: [{"minimum":90,"letter":"A","gpa":4},{"minimum":0,"letter":"F","gpa":0}]',
-                  }),
-                  field(
-                    "late_penalty_percent",
-                    "Late penalty (% of maximum points)",
-                    "number",
-                    { min: 0, max: 100 },
-                  ),
-                  field(
-                    "missing_as_zero",
-                    "Treat unscored assessments as zero at finalization",
-                    "checkbox",
-                  ),
-                  field(
-                    "late_counts_present",
-                    "Late counts as attended",
-                    "checkbox",
-                  ),
-                  field(
-                    "exclude_excused",
-                    "Exclude excused attendance from percentages",
-                    "checkbox",
-                  ),
-                ],
-                { ...policy, bands: JSON.stringify(policy.bands, null, 2) },
-              )
-            }
-          >
-            Edit grading policy
-          </button>
-        )}
-      </Card>
+      </EditableSection>
       {isStaff && (
         <Card title="Grade change history">
           <Table
