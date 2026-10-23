@@ -1,679 +1,89 @@
-
-import { useState } from "react";
-import {
-    Eye,
-    EyeOff,
-    User,
-    Mail,
-    Lock,
-    Moon,
-    Sun
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
-import { useTheme } from "../context/useTheme";
-
-import "../styles/signup.css";
-
-function Signup() {
-
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    // Controls whether the verification form is shown
-    const [verificationMode, setVerificationMode] = useState(false);
-
-    const [verificationCode, setVerificationCode] = useState("");
-
-    const [loading, setLoading] = useState(false);
-    const [verifying, setVerifying] = useState(false);
-
-    const navigate = useNavigate();
-
-    const { darkMode, toggleTheme } = useTheme();
-
-
-    const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        password: "",
-        confirmPassword: ""
-    });
-
-
-    function handleChange(event) {
-
-        const { name, value } = event.target;
-
-        setFormData({
-            ...formData,
-            [name]: value
-        });
-    }
-
-
-    // ==========================================
-    // REGISTER ACCOUNT
-    // ==========================================
-
-    async function handleSubmit(event) {
-
-        event.preventDefault();
-
-
-        // PASSWORD MATCH
-
-        if (formData.password !== formData.confirmPassword) {
-
-            alert("Passwords do not match.");
-
-            return;
-        }
-
-
-        // PASSWORD LENGTH
-
-        if (formData.password.length < 8) {
-
-            alert("Password must be at least 8 characters.");
-
-            return;
-        }
-
-
-        const fullName =
-            `${formData.firstName} ${formData.lastName}`;
-
-
-        setLoading(true);
-
-
-        try {
-
-
-            const apiUrl = "/api/register";
-
-
-            const response = await fetch(
-                apiUrl,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        name: fullName,
-                        email: formData.email,
-                        password: formData.password
-                    })
-                }
-            );
-
-
-            const result = await response.json();
-
-
-            // ==========================================
-            // REGISTRATION SUCCESS
-            // ==========================================
-
-            if (result.success) {
-
-
-                // Show verification form
-                // on the same Signup page.
-                setVerificationMode(true);
-
-                alert(
-                    "Verification code sent to your email."
-                );
-
-                return;
-            }
-
-
-            if (response.status === 409) setVerificationMode(true);
-
-            // ==========================================
-            // REGISTRATION FAILED
-            // ==========================================
-
-            alert(
-                result.message ||
-                "Unable to create your account."
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "11. FETCH ERROR:",
-                error
-            );
-
-            alert(
-                "Unable to connect to the server."
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
-    }
-
-
-    // ==========================================
-    // VERIFY EMAIL
-    // ==========================================
-
-    async function handleVerifyEmail(event) {
-
-        event.preventDefault();
-
-
-        if (!verificationCode) {
-
-            alert(
-                "Please enter your verification code."
-            );
-
-            return;
-        }
-
-
-        if (verificationCode.length !== 6) {
-
-            alert(
-                "Verification code must be 6 digits."
-            );
-
-            return;
-        }
-
-
-        setVerifying(true);
-
-
-        try {
-
-            const apiUrl = "/api/verify-email";
-
-
-            const response = await fetch(
-                apiUrl,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        email: formData.email,
-                        code: verificationCode
-                    })
-                }
-            );
-
-
-            const result = await response.json();
-
-
-            if (result.success) {
-
-                alert(
-                    "Email verified successfully! You can now sign in."
-                );
-
-
-                // Return to login page
-                navigate("/");
-
-            } else {
-
-                alert(
-                    result.message ||
-                    "Invalid verification code."
-                );
-
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "VERIFY EMAIL ERROR:",
-                error
-            );
-
-            alert(
-                "Unable to connect to the server."
-            );
-
-        } finally {
-
-            setVerifying(false);
-
-        }
-    }
-
-
-    // ==========================================
-    // RESEND VERIFICATION CODE
-    // ==========================================
-
-
-
-
-    async function handleResendCode() {
-        setVerifying(true);
-        try {
-            const response = await fetch('/api/resend-verification', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: formData.email }),
-            });
-            const result = await response.json();
-            alert(result.message);
-        } catch { alert('Unable to request a new code. Please try again.'); }
-        finally { setVerifying(false); }
-    }
-
-    return (
-
-        <div className="signup-page">
-
-
-            {/* HEADER */}
-
-            <header className="signup-header">
-
-                <div className="brand">
-
-                    <div className="brand-logo">
-                        R
-                    </div>
-
-                    <span>
-                        School Hub
-                    </span>
-
-                </div>
-
-
-                <button
-                    className="theme-button"
-                    type="button"
-                    onClick={toggleTheme}
-                    aria-label="Toggle theme"
-                >
-
-                    {darkMode ? (
-                        <Sun size={19} />
-                    ) : (
-                        <Moon size={19} />
-                    )}
-
-                </button>
-
-            </header>
-
-
-            {/* CONTENT */}
-
-            <main className="signup-content">
-
-                <section className="signup-section">
-
-
-                    {!verificationMode ? (
-
-                        <>
-                            {/* ==========================================
-                                SIGN UP
-                            ========================================== */}
-
-                            <h1>
-                                Create your
-                                <br />
-                                account
-                            </h1>
-
-
-                            <p className="signup-description">
-                                Create your School Hub account to access
-                                <br />
-                                your academic records and class requirements.
-                            </p>
-
-
-                            <form onSubmit={handleSubmit}>
-
-
-                                {/* FIRST AND LAST NAME */}
-
-                                <div className="name-row">
-
-
-                                    <div className="signup-input-wrapper">
-
-                                        <User size={17} />
-
-                                        <input
-                                            type="text"
-                                            name="firstName"
-                                            placeholder="First name"
-                                            value={formData.firstName}
-                                            onChange={handleChange}
-                                            required
-                                        />
-
-                                    </div>
-
-
-                                    <div className="signup-input-wrapper">
-
-                                        <User size={17} />
-
-                                        <input
-                                            type="text"
-                                            name="lastName"
-                                            placeholder="Last name"
-                                            value={formData.lastName}
-                                            onChange={handleChange}
-                                            required
-                                        />
-
-                                    </div>
-
-                                </div>
-
-
-                                {/* EMAIL */}
-
-                                <div className="signup-input-wrapper">
-
-                                    <Mail size={17} />
-
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        placeholder="name@example.com"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        required
-                                    />
-
-                                </div>
-
-
-                                {/* PASSWORD */}
-
-                                <div className="signup-input-wrapper">
-
-                                    <Lock size={17} />
-
-                                    <input
-                                        type={
-                                            showPassword
-                                                ? "text"
-                                                : "password"
-                                        }
-                                        name="password"
-                                        placeholder="Password"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        required
-                                    />
-
-
-                                    <button
-                                        type="button"
-                                        className="signup-password-toggle"
-                                        onClick={() =>
-                                            setShowPassword(
-                                                !showPassword
-                                            )
-                                        }
-                                        aria-label={
-                                            showPassword
-                                                ? "Hide password"
-                                                : "Show password"
-                                        }
-                                    >
-
-                                        {showPassword ? (
-                                            <EyeOff size={17} />
-                                        ) : (
-                                            <Eye size={17} />
-                                        )}
-
-                                    </button>
-
-                                </div>
-
-
-                                {/* CONFIRM PASSWORD */}
-
-                                <div className="signup-input-wrapper">
-
-                                    <Lock size={17} />
-
-                                    <input
-                                        type={
-                                            showConfirmPassword
-                                                ? "text"
-                                                : "password"
-                                        }
-                                        name="confirmPassword"
-                                        placeholder="Confirm password"
-                                        value={
-                                            formData.confirmPassword
-                                        }
-                                        onChange={handleChange}
-                                        required
-                                    />
-
-
-                                    <button
-                                        type="button"
-                                        className="signup-password-toggle"
-                                        onClick={() =>
-                                            setShowConfirmPassword(
-                                                !showConfirmPassword
-                                            )
-                                        }
-                                        aria-label={
-                                            showConfirmPassword
-                                                ? "Hide confirm password"
-                                                : "Show confirm password"
-                                        }
-                                    >
-
-                                        {showConfirmPassword ? (
-                                            <EyeOff size={17} />
-                                        ) : (
-                                            <Eye size={17} />
-                                        )}
-
-                                    </button>
-
-                                </div>
-
-
-                                {/* PASSWORD HINT */}
-
-                                <p className="password-hint">
-                                    Password must be at least 8 characters.
-                                </p>
-
-
-                                {/* CREATE ACCOUNT */}
-
-                                <button
-                                    type="submit"
-                                    className="signup-button"
-                                    disabled={loading}
-                                >
-
-                                    {loading
-                                        ? "Creating account..."
-                                        : "Create account"
-                                    }
-
-                                </button>
-
-                            </form>
-
-
-                            {/* LOGIN */}
-
-                            <p className="already-account">
-
-                                Already have an account?
-
-                                <button
-                                    type="button"
-                                    onClick={() => navigate("/")}
-                                >
-                                    Sign In
-                                </button>
-
-                            </p>
-
-
-                            {/* TERMS */}
-
-                            <p className="terms">
-
-                                By creating an account, you agree to our{" "}
-
-                                <a href="#">
-                                    ToS
-                                </a>
-
-                                {" "}and{" "}
-
-                                <a href="#">
-                                    Privacy Policy
-                                </a>.
-
-                            </p>
-
-                        </>
-
-                    ) : (
-
-                        <>
-                            {/* ==========================================
-                                EMAIL VERIFICATION
-                            ========================================== */}
-
-                            <h1>
-                                Verify your
-                                <br />
-                                email
-                            </h1>
-
-
-                            <p className="signup-description">
-
-                                We sent a 6-digit verification code to
-                                <br />
-
-                                <strong>
-                                    {formData.email}
-                                </strong>
-
-                            </p>
-
-
-                            <form
-                                onSubmit={handleVerifyEmail}
-                            >
-
-
-                                {/* VERIFICATION CODE */}
-
-                                <div className="signup-input-wrapper">
-
-                                    <Mail size={17} />
-
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        maxLength={6}
-                                        placeholder="Enter 6-digit code"
-                                        value={verificationCode}
-                                        onChange={(event) =>
-                                            setVerificationCode(
-                                                event.target.value
-                                                    .replace(/\D/g, "")
-                                            )
-                                        }
-                                        required
-                                    />
-
-                                </div>
-
-
-                                {/* VERIFY BUTTON */}
-
-                                <button
-                                    type="submit"
-                                    className="signup-button"
-                                    disabled={verifying}
-                                >
-
-                                    {verifying
-                                        ? "Verifying..."
-                                        : "Verify email"
-                                    }
-
-                                </button>
-
-
-                            </form>
-
-
-                            <button type="button" disabled={verifying} onClick={handleResendCode}>Resend verification code</button>
-                            {/* BACK TO SIGN IN */}
-
-                            <p className="already-account">
-
-                                Already verified?
-
-                                <button
-                                    type="button"
-                                    onClick={() => navigate("/")}
-                                >
-                                    Sign In
-                                </button>
-
-                            </p>
-
-
-                            <p className="terms">
-
-                                Check your inbox and enter the
-                                6-digit code sent by School Hub.
-
-                            </p>
-
-                        </>
-
-                    )}
-
-                </section>
-
-            </main>
-
-        </div>
-    );
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, KeyRound, LoaderCircle, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import AuthLayout from '../components/AuthLayout';
+import AuthField from '../components/AuthField';
+import AuthNotice from '../components/AuthNotice';
+
+export default function Signup() {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
+  const [verification, setVerification] = useState(false);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [notice, setNotice] = useState(null);
+  const [existing, setExisting] = useState(false);
+  function change(event) {
+    setForm(current => ({ ...current, [event.target.name]: event.target.value }));
+    setNotice(null);
+    setExisting(false);
+  }
+  async function request(action, body) {
+    const response = await fetch(`/api/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    return { response, result: await response.json() };
+  }
+  async function register(event) {
+    event.preventDefault();
+    if (busy) return;
+    if (form.password !== form.confirmPassword) return setNotice({ type: 'error', message: 'Passwords do not match.' });
+    if (form.password.length < 8) return setNotice({ type: 'error', message: 'Use at least 8 characters for your password.' });
+    if (new TextEncoder().encode(form.password).length > 72) return setNotice({ type: 'error', message: 'This password is too long. Try a shorter one.' });
+    setBusy(true); setNotice(null);
+    try {
+      const { response, result } = await request('register', { name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(), email: form.email, password: form.password });
+      if (response.ok && result.success) {
+        setVerification(true);
+        setNotice({ type: 'success', message: 'Your verification code is on its way. Check your inbox and spam folder.' });
+      } else {
+        setExisting(response.status === 409);
+        setNotice({ type: 'error', message: result.message || 'Unable to create your account. Please try again.' });
+      }
+    } catch { setNotice({ type: 'error', message: 'Unable to connect to the server. Please try again.' }); }
+    finally { setBusy(false); }
+  }
+  async function verify(event) {
+    event.preventDefault();
+    if (busy) return;
+    if (!/^\d{6}$/.test(code)) return setNotice({ type: 'error', message: 'Enter the six-digit code from your email.' });
+    setBusy(true); setNotice(null);
+    try {
+      const { response, result } = await request('verify-email', { email: form.email, code });
+      if (response.ok && result.success) navigate('/', { replace: true, state: { notice: 'Email verified. You can now sign in.' } });
+      else setNotice({ type: 'error', message: result.message || 'Invalid verification code.' });
+    } catch { setNotice({ type: 'error', message: 'Unable to connect to the server. Please try again.' }); }
+    finally { setBusy(false); }
+  }
+  async function resend() {
+    if (busy) return;
+    setBusy(true); setNotice(null);
+    try {
+      const { response, result } = await request('resend-verification', { email: form.email });
+      setNotice({ type: response.ok && result.success ? 'success' : 'error', message: result.message || 'Unable to request a new code.' });
+    } catch { setNotice({ type: 'error', message: 'Unable to request a new code. Please try again.' }); }
+    finally { setBusy(false); }
+  }
+  return <AuthLayout eyebrow={verification ? 'ONE LAST STEP' : 'A FRESH START'} title={verification ? 'Check your inbox' : 'Make yourself at home'} description={verification ? <>We sent a six-digit code to <strong className="auth-email">{form.email}</strong></> : 'Create your account and get ready for your school day.'} footer={<>Already have an account? <Link to="/">Sign in <ArrowRight size={14} /></Link></>}>
+    {verification && <div className="auth-state-icon"><Mail size={27} strokeWidth={1.5} /></div>}
+    <AuthNotice notice={notice} />
+    {!verification ? <form className="auth-form" onSubmit={register}>
+      <div className="auth-name-row">
+        <AuthField disabled={busy} label="First name" name="firstName" type="text" icon={UserRound} placeholder="First name" autoComplete="given-name" maxLength={60} value={form.firstName} onChange={change} required />
+        <AuthField disabled={busy} label="Last name" name="lastName" type="text" icon={UserRound} placeholder="Last name" autoComplete="family-name" maxLength={59} value={form.lastName} onChange={change} required />
+      </div>
+      <AuthField disabled={busy} label="Email address" name="email" type="email" icon={Mail} placeholder="name@example.com" autoComplete="email" value={form.email} onChange={change} required />
+      <AuthField disabled={busy} label="Password" name="password" type={showPassword ? 'text' : 'password'} icon={LockKeyhole} placeholder="Create a password" autoComplete="new-password" value={form.password} onChange={change} showPassword={showPassword} onTogglePassword={() => setShowPassword(value => !value)} required />
+      <AuthField disabled={busy} label="Confirm password" name="confirmPassword" type={showConfirm ? 'text' : 'password'} icon={LockKeyhole} placeholder="Confirm password" autoComplete="new-password" value={form.confirmPassword} onChange={change} showPassword={showConfirm} onTogglePassword={() => setShowConfirm(value => !value)} required />
+      <p className="auth-hint"><KeyRound size={13} /> Use at least 8 characters for your password.</p>
+      <button className="auth-primary" disabled={busy} type="submit">{busy ? <><LoaderCircle className="auth-spinner" size={18} /> Creating account…</> : <>Create account <ArrowRight size={17} /></>}</button>
+      {existing && <button className="auth-text-button auth-centered" type="button" onClick={() => { setVerification(true); setNotice(null); }}>Already waiting for a code? Verify your email</button>}
+    </form> : <form className="auth-form" onSubmit={verify}>
+      <AuthField disabled={busy} label="Verification code" name="code" type="text" icon={KeyRound} placeholder="Enter 6-digit code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={event => { setCode(event.target.value.replace(/\D/g, '')); setNotice(null); }} className="auth-code-input" required />
+      <p className="auth-hint">Your code expires after 10 minutes.</p>
+      <button className="auth-primary" disabled={busy} type="submit">{busy ? <><LoaderCircle className="auth-spinner" size={18} /> Please wait…</> : <>Verify email <ArrowRight size={17} /></>}</button>
+      <div className="auth-resend"><span>Didn’t receive it?</span><button className="auth-text-button" type="button" disabled={busy} onClick={resend}>Resend verification code</button></div>
+      <button className="auth-text-button auth-back" type="button" disabled={busy} onClick={() => { setVerification(false); setCode(''); setNotice(null); }}><ArrowLeft size={14} /> Use a different email</button>
+    </form>}
+  </AuthLayout>;
 }
-
-export default Signup;
-

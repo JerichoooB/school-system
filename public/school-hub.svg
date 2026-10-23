@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>School Hub</title>
+  <rect width="64" height="64" rx="17" fill="#234f3d"/>
+  <path d="m10 26 22-11 22 11-22 11-22-11Z" fill="#edf1dd"/>
+  <path d="M19 33v10c7.8 6.7 18.2 6.7 26 0V33l-13 6.5L19 33Z" fill="#edf1dd"/>
+  <path d="M53 27v16" stroke="#c5d6a1" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="53" cy="46" r="3" fill="#c5d6a1"/>
+</svg>

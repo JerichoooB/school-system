@@ -1,246 +1,32 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Mail, Sun, Moon } from "lucide-react";
-
-import { useTheme } from "../context/useTheme";
-
-import "../styles/login.css";
-
-
-function ForgotPassword() {
-
-    const [email, setEmail] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const navigate = useNavigate();
-
-    // =========================
-    // THEME
-    // =========================
-
-    const {
-        darkMode,
-        toggleTheme
-    } = useTheme();
-
-
-    // =========================
-    // FORGOT PASSWORD
-    // =========================
-
-    async function handleSubmit(event) {
-        event.preventDefault();
-        if (loading) return;
-        if (!email) {
-            alert("Please enter your email address.");
-            return;
-        }
-        setLoading(true);
-        try {
-            const response = await fetch("/api/forgot-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            });
-            const result = await response.json();
-            alert(result.message || "Unable to request a password reset.");
-            if (result.success) setEmail("");
-        } catch {
-            alert("Unable to connect to the server. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    return (
-
-        <div className="login-page">
-
-
-            {/* =========================
-                HEADER
-            ========================= */}
-
-            <header className="login-header">
-
-
-                {/* BRAND */}
-
-                <div className="brand">
-
-                    <div className="brand-logo">
-                        R
-                    </div>
-
-                    <span>
-                        School Hub
-                    </span>
-
-                </div>
-
-
-
-                {/* =========================
-                    DARK MODE TOGGLE
-                ========================= */}
-
-                <button
-                    className="theme-button"
-                    type="button"
-                    onClick={toggleTheme}
-
-                    aria-label={
-                        darkMode
-                            ? "Switch to light mode"
-                            : "Switch to dark mode"
-                    }
-                >
-
-                    {darkMode ? (
-
-                        <Sun size={19} />
-
-                    ) : (
-
-                        <Moon size={19} />
-
-                    )}
-
-                </button>
-
-
-            </header>
-
-
-
-            {/* =========================
-                CONTENT
-            ========================= */}
-
-            <main className="login-content">
-
-                <section className="login-section">
-
-
-                    {/* TITLE */}
-
-                    <h1>
-
-                        Forgot your
-
-                        <br />
-
-                        password?
-
-                    </h1>
-
-
-
-                    {/* DESCRIPTION */}
-
-                    <p className="login-description">
-
-                        Enter the email address associated with
-
-                        <br />
-
-                        your School Hub account.
-
-                    </p>
-
-
-
-                    {/* FORM */}
-
-                    <form
-                        onSubmit={handleSubmit}
-                    >
-
-
-                        {/* EMAIL */}
-
-                        <div className="input-wrapper">
-
-                            <span className="input-icon">
-
-                                <Mail size={18} />
-
-                            </span>
-
-
-                            <input
-                                type="email"
-
-                                placeholder="name@example.com"
-
-                                value={email}
-
-                                onChange={(event) =>
-                                    setEmail(
-                                        event.target.value
-                                    )
-                                }
-
-                                required
-                            />
-
-                        </div>
-
-
-
-                        {/* SEND RESET LINK */}
-
-                        <button
-                            className="signin-button"
-
-                            type="submit"
-
-                            disabled={loading}
-                        >
-
-                            {loading
-                                ? "Sending..."
-                                : "Send reset link"
-                            }
-
-                        </button>
-
-
-                    </form>
-
-
-
-                    {/* =========================
-                        BACK TO LOGIN
-                    ========================= */}
-
-                    <p className="signup-text">
-
-                        <button
-                            type="button"
-
-                            onClick={() =>
-                                navigate("/")
-                            }
-                        >
-
-                            Back to Sign in
-
-                        </button>
-
-                    </p>
-
-
-                </section>
-
-            </main>
-
-
-        </div>
-
-    );
-
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, LoaderCircle, Mail } from 'lucide-react';
+import AuthLayout from '../components/AuthLayout';
+import AuthField from '../components/AuthField';
+import AuthNotice from '../components/AuthNotice';
+
+export default function ForgotPassword() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState(null);
+  async function submit(event) {
+    event.preventDefault();
+    if (loading) return;
+    setLoading(true); setNotice(null);
+    try {
+      const response = await fetch('/api/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      const result = await response.json();
+      setNotice({ type: response.ok && result.success ? 'success' : 'error', message: result.message || 'Unable to request a password reset. Please try again.' });
+    } catch { setNotice({ type: 'error', message: 'Unable to connect to the server. Please try again.' }); }
+    finally { setLoading(false); }
+  }
+  return <AuthLayout eyebrow="LET’S GET YOU BACK IN" title="Forgot your password?" description="It happens. Enter your email and we’ll help you reset it." footer={<Link to="/"><ArrowLeft size={14} /> Back to sign in</Link>}>
+    <div className="auth-state-icon"><Mail size={27} strokeWidth={1.5} /></div>
+    <AuthNotice notice={notice} />
+    <form className="auth-form" onSubmit={submit}>
+      <AuthField disabled={loading} label="Email address" name="email" type="email" icon={Mail} placeholder="name@example.com" autoComplete="email" value={email} onChange={event => { setEmail(event.target.value); setNotice(null); }} required />
+      <button className="auth-primary signin-button" type="submit" disabled={loading}>{loading ? <><LoaderCircle className="auth-spinner" size={18} /> Sending…</> : <>Send reset link <ArrowRight size={17} /></>}</button>
+    </form>
+    <p className="auth-helper">Signed up with Google? Use <Link to="/">Google sign-in</Link> instead.</p>
+  </AuthLayout>;
 }
-
-
-export default ForgotPassword;

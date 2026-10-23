@@ -88,7 +88,9 @@ async function signIn(value = password) {
 test('login and account browser flows', async t => {
   await t.test('login renders; required and email validation prevent empty/malformed submissions', async () => {
     await page.goto(base);
-    await page.getByRole('heading', { name: 'School Hub Management Portal' }).waitFor();
+    await page.getByRole('heading', { name: 'Welcome back' }).waitFor();
+    assert.equal(await page.title(), 'School Hub');
+    assert.equal(await page.locator('link[rel=icon]').getAttribute('href'), '/school-hub.svg');
     let requests = 0;
     const count = req => { if (req.url().endsWith('/api/login')) requests++; };
     page.on('request', count);
@@ -118,11 +120,11 @@ test('login and account browser flows', async t => {
     await page.locator('input[name=password]').fill(password);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await page.waitForFunction(() => !document.querySelector('.signin-button').disabled);
-    assert.equal(dialogs.at(-1), 'Unable to connect to the server.');
+    await page.getByRole('alert').getByText('Unable to connect to the server. Please try again.').waitFor();
     await page.unroute('**/api/login');
   });
   await t.test('signup, resend, bad verification and successful verification work', async () => {
-    await page.getByRole('button', { name: 'Sign Up', exact: true }).click();
+    await page.getByRole('link', { name: 'Create an account' }).click();
     await page.waitForURL(`${base}/signup`);
     await page.getByPlaceholder('First name').fill('Browser');
     await page.getByPlaceholder('Last name').fill('Student');
@@ -141,7 +143,7 @@ test('login and account browser flows', async t => {
   });
   await t.test('invalid credentials are rejected; loading prevents duplicate submissions', async () => {
     assert.equal((await signIn('Wrong password 123')).status(), 401);
-    assert.equal(dialogs.at(-1), 'Invalid email or password.');
+    await page.getByRole('alert').getByText('Invalid email or password.').waitFor();
     let requests = 0;
     await page.route('**/api/login', async route => {
       requests++;
@@ -176,7 +178,7 @@ test('login and account browser flows', async t => {
     assert.equal(await page.evaluate(() => localStorage.getItem('isAuthenticated')), null);
   });
   await t.test('forgot-password, new-password confirmation and reset invalidate the old password', async () => {
-    await page.getByRole('button', { name: 'Forgot your password?' }).click();
+    await page.getByRole('link', { name: 'Forgot your password?' }).click();
     await page.waitForURL(`${base}/forgot-password`);
     await page.getByRole('button', { name: 'Send reset link' }).waitFor();
     await page.getByPlaceholder('name@example.com').fill(email);
@@ -187,7 +189,7 @@ test('login and account browser flows', async t => {
     await page.getByPlaceholder('New password', { exact: true }).fill(changedPassword);
     await page.getByPlaceholder('Confirm new password', { exact: true }).fill('Mismatch password!');
     await page.locator('button[type=submit]').click();
-    assert.ok(dialogs.at(-1).toLowerCase().includes('match'));
+    await page.getByRole('alert').getByText('Passwords do not match.').waitFor();
     await page.getByPlaceholder('Confirm new password', { exact: true }).fill(changedPassword);
     assert.equal((await waitResponse('reset-password', () => page.locator('button[type=submit]').click())).status(), 200);
     await page.waitForURL(`${base}/`);
@@ -243,7 +245,7 @@ test('login and account browser flows', async t => {
               const button = document.createElement('button');
               button.textContent = 'Continue with Google';
               button.onclick = () => window.testGoogleOptions.callback({ credential: ${JSON.stringify(credential)} });
-              element.appendChild(button);
+              element.replaceChildren(button);
             },
             cancel() {}, disableAutoSelect() {}, prompt() {}
           } } };
@@ -266,11 +268,28 @@ test('login and account browser flows', async t => {
       await query('DELETE FROM users WHERE email = $1', [googleEmail]);
     }
   });
+  await t.test('recovery without a token offers a new link instead of a broken form', async () => {
+    await page.goto(`${base}/reset-password`);
+    await page.getByRole('heading', { name: 'Let’s try a fresh link' }).waitFor();
+    assert.equal(await page.locator('form').count(), 0);
+    await page.getByRole('link', { name: 'Request a new reset link' }).click();
+    await page.waitForURL(`${base}/forgot-password`);
+    await page.getByRole('button', { name: 'Send reset link' }).waitFor();
+  });
   await t.test('mobile login renders without horizontal overflow or runtime errors', async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(base);
-    await page.getByRole('heading', { name: 'School Hub Management Portal' }).waitFor();
+    await page.getByRole('heading', { name: 'Welcome back' }).waitFor();
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const path of ['/', '/signup', '/forgot-password', '/reset-password']) {
+        await page.goto(`${base}${path}`);
+        await page.locator('.auth-card h1').waitFor();
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, `${path} should fit at ${width}px`);
+      }
+    }
+    assert.equal(dialogs.length, 0, 'Authentication should use inline feedback rather than browser alerts');
     assert.equal(runtimeErrors.length, 0, runtimeErrors.join('\n'));
   });
 });
