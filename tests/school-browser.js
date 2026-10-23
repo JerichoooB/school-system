@@ -264,18 +264,44 @@ test("approved school screens and role workflows work in a real browser", async 
     },
   );
   await t.test(
-    "profile and preferences persist through a refresh",
+    "personal and emergency cards edit inline, cancel drafts and preserve each other after refresh",
     async () => {
       await open("profile");
-      await page
-        .getByRole("button", { name: "Edit profile", exact: true })
-        .click();
-      await page
-        .getByLabel("Phone (optional)", { exact: true })
-        .fill("09123456789");
-      await saveDialog();
+      const card = page.locator(".sh-card").filter({has: page.getByRole("heading", {name:"Personal information",exact:true})});
+      const editButton = card.getByRole("button", {name:"Edit profile",exact:true});
+      await editButton.click();
+      assert.equal(await page.getByRole("dialog").count(), 0);
+      await card.getByLabel("Phone (optional)", {exact:true}).fill("Discard this draft");
+      await card.getByRole("button", {name:"Cancel",exact:true}).click();
+      await editButton.click();
+      assert.equal(await card.getByLabel("Phone (optional)", {exact:true}).inputValue(), "");
+      await card.getByLabel("Phone (optional)", {exact:true}).fill("09123456789");
+      const saved = page.waitForResponse(r => r.url().includes("/api/school?resource=profile") && r.request().method() === "POST");
+      await card.getByRole("button", {name:"Save changes",exact:true}).click();
+      assert.equal((await saved).status(), 200);
+      await card.getByRole("button", {name:"Edit profile",exact:true}).waitFor();
+      const emergencyCard = page.locator(".sh-card").filter({has: page.getByRole("heading", {name:"Emergency contact",exact:true})});
+      await emergencyCard.getByRole("button", {name:"Edit emergency contact",exact:true}).click();
+      assert.equal(await page.getByRole("dialog").count(), 0);
+      await emergencyCard.getByLabel("Emergency contact name (optional)", {exact:true}).fill("Discarded contact");
+      await emergencyCard.getByRole("button", {name:"Cancel",exact:true}).click();
+      await emergencyCard.getByRole("button", {name:"Edit emergency contact",exact:true}).click();
+      assert.equal(await emergencyCard.getByLabel("Emergency contact name (optional)", {exact:true}).inputValue(), "");
+      await emergencyCard.getByLabel("Emergency contact name (optional)", {exact:true}).fill("Family contact");
+      await emergencyCard.getByLabel("Emergency contact phone (optional)", {exact:true}).fill("09987654321");
+      await emergencyCard.getByRole("button", {name:"Save changes",exact:true}).click();
+      await emergencyCard.getByRole("button", {name:"Edit emergency contact",exact:true}).waitFor();
+      await card.getByText("09123456789", {exact:true}).waitFor();
+      // Saving personal information must preserve the separately edited contact.
+      await editButton.click();
+      await card.getByLabel("Address (optional)", {exact:true}).fill("School address");
+      await card.getByRole("button", {name:"Save changes",exact:true}).click();
+      await editButton.waitFor();
+      await emergencyCard.getByText("Family contact", {exact:true}).waitFor();
       await page.reload();
       await page.getByText("09123456789", { exact: true }).waitFor();
+      await page.getByText("Family contact", {exact:true}).waitFor();
+      await page.getByText("09987654321", {exact:true}).waitFor();
     },
   );
   await t.test("avatar upload, replacement and removal update profile, header and sidebar together", async () => {

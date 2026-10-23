@@ -1,3 +1,10 @@
+# Latest update — inline profile card editing
+
+- Moved Edit profile from the banner into Personal information. Editing renders a form inside the card, with Save/Cancel, busy state, validation and inline errors.
+- Emergency contact has its own inline Edit/Save/Cancel controls. Personal and emergency saves merge the latest other fields so neither card clears the other.
+- Email stays read-only. Existing profile API and academic permissions are unchanged.
+- Lint/build and all 13 academic browser checks pass. Coverage includes canceling each card, saving each card, preservation across edits and refresh, avatars, mobile layout and accessibility.
+
 # Latest fix — profile avatar synchronization
 
 - Header, sidebar and profile banner now use the same current user's newest avatar record, falling back to the name initial when no avatar remains.

@@ -532,43 +532,13 @@ export default function Portal() {
             <p>{user.email}</p>
             <Badge>{user.role}</Badge>
           </div>
-          <button
-            className="sh-primary"
-            onClick={() =>
-              edit(
-                "profile",
-                "Edit profile",
-                [
-                  field("name", "Full name"),
-                  field("phone", "Phone", "tel", { optional: true }),
-                  field("address", "Address", "textarea", { optional: true }),
-                  field("emergency_name", "Emergency contact name", "text", {
-                    optional: true,
-                  }),
-                  field("emergency_phone", "Emergency contact phone", "tel", {
-                    optional: true,
-                  }),
-                ],
-                { ...profile, name: user.name },
-              )
-            }
-          >
-            Edit profile
-          </button>
         </div>
         <div className="sh-grid">
-          <Card title="Personal information">
-            <dl>
-              <dt>Full name</dt>
-              <dd>{user.name}</dd>
-              <dt>Email address</dt>
-              <dd>{user.email}</dd>
-              <dt>Phone</dt>
-              <dd>{profile.phone || "Not provided"}</dd>
-              <dt>Address</dt>
-              <dd>{profile.address || "Not provided"}</dd>
-            </dl>
-          </Card>
+          <ProfileInformation
+            user={user}
+            profile={profile}
+            onSave={(values) => save("profile", values)}
+          />
           <Card title="Academic information">
             <dl>
               <dt>Student number</dt>
@@ -603,14 +573,12 @@ export default function Portal() {
               onChanged={load}
             />
           </Card>
-          <Card title="Emergency contact">
-            <dl>
-              <dt>Name</dt>
-              <dd>{profile.emergency_name || "Not provided"}</dd>
-              <dt>Phone</dt>
-              <dd>{profile.emergency_phone || "Not provided"}</dd>
-            </dl>
-          </Card>
+          <ProfileInformation
+            user={user}
+            profile={profile}
+            emergency
+            onSave={(values) => save("profile", values)}
+          />
         </div>
       </>
     );
@@ -2331,6 +2299,69 @@ export default function Portal() {
         />
       )}
     </div>
+  );
+}
+function ProfileInformation({ user, profile, onSave, emergency = false }) {
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const title = emergency ? "Emergency contact" : "Personal information";
+  const editLabel = emergency ? "Edit emergency contact" : "Edit profile";
+  async function submit(event) {
+    event.preventDefault();
+    const values = Object.fromEntries(new FormData(event.currentTarget));
+    setBusy(true);
+    setError("");
+    try {
+      await onSave({ ...profile, name: user.name, ...values });
+      setEditing(false);
+    } catch (e) {
+      setError(e.message || "Unable to save your details. Please retry.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Card title={title} action={!editing && (
+      <button className="sh-primary" onClick={() => { setError(""); setEditing(true); }}>
+        {editLabel}
+      </button>
+    )}>
+      {editing ? (
+        <form className="sh-form" aria-label={`Edit ${title.toLowerCase()}`} onSubmit={submit}>
+          {emergency ? (
+            <>
+              <label>Emergency contact name (optional)<input name="emergency_name" defaultValue={profile.emergency_name || ""} maxLength={120} /></label>
+              <label>Emergency contact phone (optional)<input name="emergency_phone" type="tel" defaultValue={profile.emergency_phone || ""} maxLength={60} /></label>
+            </>
+          ) : (
+            <>
+              <label>Full name<input name="name" defaultValue={user.name} required maxLength={120} autoComplete="name" /></label>
+              <label>Email address<input type="email" value={user.email} readOnly autoComplete="email" /></label>
+              <label>Phone (optional)<input name="phone" type="tel" defaultValue={profile.phone || ""} maxLength={60} autoComplete="tel" /></label>
+              <label>Address (optional)<textarea name="address" defaultValue={profile.address || ""} maxLength={500} autoComplete="street-address" /></label>
+            </>
+          )}
+          {error && <p role="alert" className="sh-error">{error}</p>}
+          <div className="sh-actions">
+            <button className="sh-primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save changes"}</button>
+            <button type="button" disabled={busy} onClick={() => { setEditing(false); setError(""); }}>Cancel</button>
+          </div>
+        </form>
+      ) : emergency ? (
+        <dl>
+          <dt>Name</dt><dd>{profile.emergency_name || "Not provided"}</dd>
+          <dt>Phone</dt><dd>{profile.emergency_phone || "Not provided"}</dd>
+        </dl>
+      ) : (
+        <dl>
+          <dt>Full name</dt><dd>{user.name}</dd>
+          <dt>Email address</dt><dd>{user.email}</dd>
+          <dt>Phone</dt><dd>{profile.phone || "Not provided"}</dd>
+          <dt>Address</dt><dd>{profile.address || "Not provided"}</dd>
+        </dl>
+      )}
+    </Card>
   );
 }
 function AcademicSetup({ data, edit }) {
