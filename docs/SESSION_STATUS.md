@@ -4,7 +4,7 @@
 - Reusable EditableSection uses the same fields, serialization, validation and API authorization as existing dialogs. Dialogs remain available for other workflows. Inline fields preserve draft values on errors, discard on Cancel and close after successful save. Password confirmation checks locally before server submission.
 - Lint/build and all 15 academic browser checks pass, including inline settings validation/cancel/persistence, password mismatch, grading policy, help article updates, old dialog flows, profile/avatar, mobile and light/dark accessibility.
 - Deployment smoke now saves preferences for its unique temporary account through the inline editor and cleans up that account afterward.
-- Production verification pending deployment of this update.
+- e5bbc6c9 is live. Deployed smoke passed, including saving preferences through the inline form for a unique temporary account. Eleven sidebar switches completed in 761ms without repeated school/session reads. Database, session, role, private Blob, unauthorized-job and logout checks passed; test account/files were removed.
 
 # Latest update — whole-app UI polish
 
