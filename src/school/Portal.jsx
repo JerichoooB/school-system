@@ -1,5 +1,5 @@
 import { GoogleLogin } from "@react-oauth/google";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -112,9 +112,11 @@ export default function Portal() {
     [scheduleMode, setScheduleMode] = useState("week"),
     [termFilter, setTermFilter] = useState("all");
   const { darkMode, toggleTheme, setAppearance } = useTheme();
+  const lastLoaded = useRef(0);
   const load = useCallback(async () => {
     const result = await schoolRequest();
     setData(result);
+    lastLoaded.current = Date.now();
     return result;
   }, []);
   useEffect(() => {
@@ -134,6 +136,7 @@ export default function Portal() {
         }
         if (active) {
           setData(result);
+          lastLoaded.current = Date.now();
           if (result.profile[0]?.theme) setAppearance(result.profile[0].theme);
         }
       })
@@ -144,6 +147,39 @@ export default function Portal() {
       active = false;
     };
   }, [setAppearance]);
+  // Keep navigation immediate while periodically revalidating server-owned data.
+  // Nothing is cached in browser storage, and every mutation is authorized by the API.
+  useEffect(() => {
+    let active = true, refreshing = false;
+    async function refresh() {
+      if (document.visibilityState !== "visible" || refreshing ||
+          !lastLoaded.current || Date.now() - lastLoaded.current < 60000) return;
+      refreshing = true;
+      try {
+        const result = await schoolRequest();
+        if (active) {
+          setData(result);
+          lastLoaded.current = Date.now();
+        }
+      } catch (e) {
+        if (active) {
+          if (e.status === 401 || e.status === 403) navigate("/", { replace: true });
+          else setError(e.message);
+        }
+      } finally {
+        refreshing = false;
+      }
+    }
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [navigate]);
   async function save(resource, values) {
     await schoolRequest(resource, values);
     if (resource === "preferences" && (values.theme === "dark") !== darkMode)
@@ -2120,7 +2156,15 @@ export default function Portal() {
           onClick={() => setMenu(false)}
         />
       )}
-      <aside className={`sh-sidebar ${menu ? "open" : ""}`}>
+      <aside className={`sh-sidebar ${menu ? "open" : ""}`} onClick={(event) => {
+        if (event.target.closest("a")) {
+          setMenu(false);
+          setBells(false);
+          setDialog(null);
+          setError("");
+          setNotice("");
+        }
+      }}>
         <Link className="sh-brand" to="/dashboard">
           <img src="/school-hub.svg" alt="" />
           School Hub

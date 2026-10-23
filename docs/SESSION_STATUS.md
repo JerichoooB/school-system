@@ -1,3 +1,13 @@
+# Latest checkpoint — navigation performance
+
+- Fixed repeated portal remounts: authenticated pages now share one protected layout and reuse in-memory workspace data during navigation.
+- Mutations still refresh data; visible tabs refresh in the background every minute and on returning focus when stale. Revoked access redirects to sign-in. No school data is cached in localStorage.
+- Vercel functions configured for sin1 (Singapore), near the production Neon host in ap-southeast-1.
+- Lint/build pass. 12 academic browser checks and 13 auth browser checks pass, including no-repeat-read navigation and background revocation regression tests.
+- Live smoke script now checks sidebar navigation rather than doing a full document reload per page, and reports elapsed navigation time plus zero repeated workspace/session reads.
+- Production navigation verification pending deployment of this change.
+- Operator confirmed both cron announcement email delivery and Formspree support receipt. Local production dump restored successfully into a disposable Windows database: 43 tables. Neon history window remains 6 hours. Blob store is private and currently empty. UptimeRobot reports Up. Regular backup scheduling remains outstanding.
+
 # Resume checkpoint — live verification completed
 
 Implementation and grading fixes are saved on main. The user resumed work and requested another live test after configuring CRON_SECRET. Latest verification completed successfully on 2026-10-23.
@@ -7,7 +17,7 @@ Implementation and grading fixes are saved on main. The user resumed work and re
 - All 13 approved School Hub screens are implemented with Neon data and server-enforced administrator/teacher/student roles.
 - Production schema: 43 tables, migrations through 007 applied without resetting existing records.
 - jerichobalayog000@gmail.com is the active verified Administrator, explicitly chosen by the user.
-- Build/lint pass. Current automated checks: 31 backend tests, 13 authentication browser checks, 10 academic browser/mobile/accessibility checks (54 total).
+- Build/lint pass. Current automated checks: 31 backend tests (previously passed), 13 authentication browser checks, 12 academic browser/mobile/accessibility checks (56 total).
 - Live schoolhub-ri.vercel.app: login/session/logout, role-scoped data, private Blob upload/download/deletion and anonymous denial, and all 11 student routes passed.
 - Expanded live academic workflow passed 98 HTTP assertions: setup, enrollment/capacity, timetables/conflicts, course resources and private attachments, assignment drafts/submissions/history, rubrics, resubmission invalidation, scores/final grades, exams, attendance/bulk corrections, announcement scheduling/reads/files, notifications, profiles/preferences, CSV import, catalog edits, help publishing, password/session revocation, inactive users, withdrawal/history and class archival.
 - All temporary live accounts, files and academic records from that run were removed successfully.

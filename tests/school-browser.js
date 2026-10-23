@@ -159,6 +159,45 @@ test("approved school screens and role workflows work in a real browser", async 
       }
     },
   );
+  await t.test("sidebar navigation reuses the workspace without session or data reloads", async () => {
+    await open("dashboard");
+    await page.locator(".sh-app").evaluate(el => { el.dataset.navigationCheck = "persisted"; });
+    const reads = [];
+    const track = req => {
+      if (req.method() === "GET" && /\/api\/(session|school)(?:\?|$)/.test(req.url())) reads.push(req.url());
+    };
+    page.on("request", track);
+    try {
+      for (const name of ["Profile", "Settings", "Courses", "Grades", "Help & Support", "Dashboard"]) {
+        await page.locator(".sh-sidebar").getByRole("link", { name, exact: true }).click();
+        await page.locator(".sh-main h1").filter({ hasText: name }).waitFor();
+        assert.equal(await page.locator(".sh-app").getAttribute("data-navigation-check"), "persisted");
+        assert.equal(await page.getByText("Loading your school workspace…", { exact: true }).count(), 0);
+      }
+      assert.deepEqual(reads, [], "ordinary navigation should not wait on either API");
+    } finally {
+      page.off("request", track);
+    }
+  });
+  await t.test("persistent workspace refreshes in the background and rejects revoked access", async () => {
+    await page.clock.install();
+    await open("dashboard");
+    const refresh = page.waitForResponse(r => r.url() === `${base}/api/school` && r.request().method() === "GET");
+    await page.clock.fastForward(61000);
+    assert.equal((await refresh).status(), 200);
+    await page.locator(".sh-main h1").waitFor();
+    try {
+      await query("UPDATE users SET status='inactive' WHERE id=$1", [users.admin.id]);
+      const denied = page.waitForResponse(r => r.url() === `${base}/api/school` && r.status() === 403);
+      await page.clock.fastForward(61000);
+      await denied;
+      await page.waitForURL(`${base}/`);
+      await page.getByLabel("Email address").waitFor();
+    } finally {
+      await query("UPDATE users SET status='active' WHERE id=$1", [users.admin.id]);
+    }
+    await login("admin");
+  });
   await t.test(
     "administrator creates a room through the academic setup form",
     async () => {

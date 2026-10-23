@@ -178,22 +178,29 @@ try {
           sameSite: "Lax",
         },
       ]);
-      for (const path of [
-        "dashboard",
-        "profile",
-        "courses",
-        "schedule",
-        "grades",
-        "attendance",
-        "assignments",
-        "announcements",
-        "exams",
-        "settings",
-        "help",
-      ]) {
-        await page.goto(`${base}/${path}`, { waitUntil: "domcontentloaded" });
-        await page.locator(".sh-main h1").waitFor();
-        console.log(`PASS deployed page: ${path}`);
+      await page.goto(`${base}/dashboard`, { waitUntil: "domcontentloaded" });
+      await page.locator(".sh-main h1").waitFor();
+      let navigationReads = 0;
+      const countRead = request => {
+        if (request.method() === "GET" && /\/api\/(school|session)(?:\?|$)/.test(request.url())) navigationReads++;
+      };
+      page.on("request", countRead);
+      const navigationStarted = Date.now();
+      try {
+        for (const path of [
+          "profile", "courses", "schedule", "grades", "attendance",
+          "assignments", "announcements", "exams", "settings", "help", "dashboard",
+        ]) {
+          await page.locator(`.sh-sidebar a[href="/${path}"]`).click();
+          await page.waitForURL(`${base}/${path}`);
+          const title = path === "help" ? "Help & Support" : path[0].toUpperCase() + path.slice(1);
+          await page.getByRole("heading", {name: title, exact: true, level: 1}).waitFor();
+          console.log(`PASS deployed page: ${path}`);
+        }
+        assert.equal(navigationReads, 0, "Page switches should reuse loaded workspace data.");
+        console.log(`PASS 11 live sidebar switches in ${Date.now() - navigationStarted}ms with no repeated session or school reads`);
+      } finally {
+        page.off("request", countRead);
       }
       console.log(
         "PASS deployed browser navigation across 11 student screens (TLS-verified network transport)",

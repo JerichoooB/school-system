@@ -29,38 +29,20 @@ function App() {
           <Route path="/signup" element={<Signup />} />
 
           <Route
-            path="/dashboard"
             element={
               <ProtectedRoute>
-                <Portal key="dashboard" />
+                <Portal />
               </ProtectedRoute>
             }
-          />
-
-          {[
-            "profile",
-            "courses",
-            "schedule",
-            "grades",
-            "attendance",
-            "assignments",
-            "announcements",
-            "exams",
-            "students",
-            "teachers",
-            "settings",
-            "help",
-          ].map((path) => (
-            <Route
-              key={path}
-              path={`/${path}`}
-              element={
-                <ProtectedRoute>
-                  <Portal key={path} />
-                </ProtectedRoute>
-              }
-            />
-          ))}
+          >
+            {[
+              "dashboard", "profile", "courses", "schedule", "grades",
+              "attendance", "assignments", "announcements", "exams",
+              "students", "teachers", "settings", "help",
+            ].map((path) => (
+              <Route key={path} path={`/${path}`} element={null} />
+            ))}
+          </Route>
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
           <Route path="/reset-password" element={<ResetPassword />} />

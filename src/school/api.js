@@ -10,8 +10,11 @@ export async function schoolRequest(resource, body) {
         },
   );
   const result = await response.json();
-  if (!response.ok)
-    throw new Error(result.message || "The request could not be completed.");
+  if (!response.ok) {
+    const error = new Error(result.message || "The request could not be completed.");
+    error.status = response.status;
+    throw error;
+  }
   return result;
 }
 export function downloadCSV(name, rows) {
