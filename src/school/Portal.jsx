@@ -100,6 +100,7 @@ export default function Portal() {
   const location = useLocation(),
     navigate = useNavigate();
   const page = location.pathname.split("/")[1];
+  const PageIcon = navigation.flatMap(([, items]) => items).find(([, path]) => path === page)?.[2] || (page === "settings" ? Settings : HelpCircle);
   const [allData, setData] = useState(null),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -900,7 +901,7 @@ export default function Portal() {
             timezone={school.timezone || "Asia/Manila"}
           />
         ) : scheduleMode === "week" ? (
-          <div className="sh-calendar">
+          <div className="sh-calendar" tabIndex={0} role="region" aria-label="Weekly schedule">
             {[
               "Monday",
               "Tuesday",
@@ -2260,6 +2261,7 @@ export default function Portal() {
                 }
               </p>
             </div>
+            <span className="sh-page-mark" aria-hidden="true"><PageIcon size={25} strokeWidth={1.5} /></span>
           </div>
           {error && (
             <div role="alert" className="sh-error">

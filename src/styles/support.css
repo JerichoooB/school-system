@@ -1,8 +1,15 @@
-.support-page { max-width: 620px; margin: 5vh auto; padding: 32px; font-family: inherit; color: #153a2c; background: #fff; border: 1px solid #dfe5df; border-radius: 16px; }
-.support-page p { line-height: 1.6; }
-.support-page label { display: grid; gap: 8px; margin: 20px 0; }
-.support-page input, .support-page textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 12px; border: 1px solid #aab8af; border-radius: 8px; }
-.support-page button { padding: 12px 24px; background: #153a2c; color: white; border: 0; border-radius: 8px; cursor: pointer; font: inherit; }
+.support-page { color: var(--auth-ink); font-size: 13px; }
+.support-note { background: var(--auth-soft); border: 1px solid var(--auth-border); padding: 13px 15px; border-radius: 10px; line-height: 1.7; color: var(--auth-ink); margin: 0 0 22px; }
+.support-page label { display: grid; gap: 8px; margin: 18px 0; font-weight: 550; }
+.support-page input, .support-page textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 13px 14px; border: 1px solid var(--auth-border); border-radius: 10px; background: var(--auth-input); color: var(--auth-ink); }
+.support-page textarea { resize: vertical; min-height: 130px; }
+.support-page button { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; background: var(--auth-accent); color: #fff; border: 0; border-radius: 10px; cursor: pointer; font: inherit; font-weight: 600; }
+.dark .support-page button { color: #193d2a; }
+.support-page button:hover { filter: brightness(1.08); }
 .support-page button:disabled { opacity: .6; cursor: wait; }
 .support-page .support-honeypot { display: none; }
-@media (max-width: 650px) { .support-page { margin: 16px; padding: 20px; } }
+.support-page > a { display: inline-block; font-weight: 550; margin-top: 12px; color: var(--auth-accent); }
+.support-page [role="alert"] { color: #a13737; }
+.dark .support-page [role="alert"] { color: #f0b2a7; }
+.support-page [role="status"]:not(:empty) { background: var(--auth-soft); padding: 12px; border-radius: 10px; }
+@media (max-width: 530px) { .support-page input, .support-page textarea { font-size: 16px; } }

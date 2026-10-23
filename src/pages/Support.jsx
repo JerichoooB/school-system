@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import AuthLayout from '../components/AuthLayout';
+import { ArrowUpRight } from 'lucide-react';
 import '../styles/support.css';
 
 export default function Support() {
@@ -25,18 +27,18 @@ export default function Support() {
       setMessage('Unable to send your message. Please try again.');
     }
   }
-  return <main className="support-page">
-    <Link to="/">School Hub</Link>
-    <h1>Help &amp; support</h1>
-    <p>Send a question to the School Hub team. Never include passwords or verification codes.</p>
+  return <AuthLayout eyebrow="HERE TO HELP" title="Help & support" description="Send a question to the School Hub team. We’ll reply to the email address you provide." footer={<Link to="/">Back to sign in <ArrowUpRight size={14} /></Link>}>
+    <div className="support-page">
+    <p className="support-note">Keep your account safe: never include passwords or verification codes.</p>
     <form onSubmit={submit}>
       <label>Your name<input name="name" required maxLength={120} autoComplete="name" /></label>
       <label>Email address<input name="email" type="email" required autoComplete="email" /></label>
       <label>Message<textarea name="message" required maxLength={5000} rows={6} /></label>
       <input type="text" name="_gotcha" tabIndex={-1} autoComplete="off" className="support-honeypot" aria-hidden="true" />
-      <button disabled={state === 'sending'}>{state === 'sending' ? 'Sending…' : 'Send message'}</button>
+      <button disabled={state === 'sending'}>{state === 'sending' ? 'Sending…' : 'Send message'} <ArrowUpRight size={16} aria-hidden="true" /></button>
       <p role={state === 'error' ? 'alert' : 'status'}>{message}</p>
     </form>
     <Link to="/dashboard">Back to dashboard</Link>
-  </main>;
+    </div>
+  </AuthLayout>;
 }

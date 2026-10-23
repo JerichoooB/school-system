@@ -75,7 +75,7 @@ export default function AttendanceCalendar({ data, sectionLabel, policy }) {
           </div>
         }
       >
-        <div className="sh-month-scroll">
+        <div className="sh-month-scroll" tabIndex={0} role="region" aria-label="Attendance calendar">
           <div className="sh-month">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
               <b key={d}>{d}</b>

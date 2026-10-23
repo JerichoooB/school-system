@@ -292,4 +292,20 @@ test('login and account browser flows', async t => {
     assert.equal(dialogs.length, 0, 'Authentication should use inline feedback rather than browser alerts');
     assert.equal(runtimeErrors.length, 0, runtimeErrors.join('\n'));
   });
+  await t.test('all public account and support screens are accessible in both themes on desktop and mobile', async () => {
+    for (const theme of ['light', 'dark']) {
+      await page.evaluate(value => localStorage.setItem('theme', value), theme);
+      for (const width of [390, 1440]) {
+        await page.setViewportSize({width, height:900});
+        for (const path of ['/', '/signup', '/forgot-password', '/reset-password', '/support']) {
+          await page.goto(`${base}${path}`);
+          await page.locator('.auth-card h1').waitFor();
+          await page.addScriptTag({path:'node_modules/axe-core/axe.min.js'});
+          const violations = await page.evaluate(async () => (await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})));
+          assert.deepEqual(violations, [], `${theme} ${width}px ${path}`);
+          assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `${theme} ${width}px ${path}`);
+        }
+      }
+    }
+  });
 });

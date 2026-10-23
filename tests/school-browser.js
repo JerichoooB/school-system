@@ -130,6 +130,7 @@ async function saveDialog() {
 }
 test("approved school screens and role workflows work in a real browser", async (t) => {
   await login("admin");
+  if (process.env.UI_REVIEW === "1") await mkdir("/workspace/schoolhub-ui-previews/polished", {recursive:true});
   await t.test(
     "all 13 administrator screens load without fake data or broken routes",
     async () => {
@@ -156,7 +157,18 @@ test("approved school screens and role workflows work in a real browser", async 
             : path[0].toUpperCase() + path.slice(1),
         );
         assert.equal(await page.locator(".sh-main .sh-error").count(), 0, path);
+        if (process.env.UI_REVIEW === "1") await page.screenshot({path:`/workspace/schoolhub-ui-previews/polished/${path}-desktop.png`,fullPage:true});
       }
+      await page.setViewportSize({width:390,height:844});
+      for (const path of ["students", "teachers"]) {
+        await open(path);
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `mobile admin ${path}`);
+        await page.addScriptTag({path:'node_modules/axe-core/axe.min.js'});
+        const issues = await page.evaluate(async () => (await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>v.id));
+        assert.deepEqual(issues, [], `mobile admin ${path}`);
+        if (process.env.UI_REVIEW === "1") await page.screenshot({path:`/workspace/schoolhub-ui-previews/polished/${path}-mobile.png`,fullPage:true});
+      }
+      await page.setViewportSize({width:1280,height:900});
     },
   );
   await t.test("sidebar navigation reuses the workspace without session or data reloads", async () => {
@@ -413,6 +425,7 @@ test("approved school screens and role workflows work in a real browser", async 
         "help",
       ]) {
         await open(path);
+        if (process.env.UI_REVIEW === "1") await page.screenshot({path:`/workspace/schoolhub-ui-previews/polished/${path}-mobile.png`,fullPage:true});
         assert.ok(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= window.innerWidth + 1,
@@ -436,9 +449,13 @@ test("approved school screens and role workflows work in a real browser", async 
     }
     await page.getByRole('button',{name:'Toggle theme',exact:true}).click();
     await page.waitForFunction(()=>document.documentElement.classList.contains('dark'));
-    await page.addScriptTag({path:'node_modules/axe-core/axe.min.js'});
-    const dark=await page.evaluate(async()=>await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
-    assert.deepEqual(dark.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[],'dark theme');
+    for(const path of ['dashboard','profile','courses','schedule','grades','attendance','assignments','announcements','exams','settings','help']) {
+      await open(path);
+      await page.addScriptTag({path:'node_modules/axe-core/axe.min.js'});
+      const dark=await page.evaluate(async()=>await window.axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}}));
+      assert.deepEqual(dark.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[],`dark ${path}`);
+      if(process.env.UI_REVIEW === "1") await page.screenshot({path:`/workspace/schoolhub-ui-previews/polished/${path}-dark.png`,fullPage:true});
+    }
   });
   assert.deepEqual(errors, []);
 });

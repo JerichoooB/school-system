@@ -135,3 +135,39 @@ html.dark .auth-mobile-brand .auth-brand-mark { background: #2d4937; color: #c0d
 }
 @media (max-width: 350px) { .auth-main-content { padding-left: 18px; padding-right: 18px; }.auth-name-row { grid-template-columns: 1fr; }.auth-form-options { align-items: flex-end; }.auth-session-note { display: none; }.auth-form-options > a { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { .auth-layout *, .auth-layout *::before, .auth-layout *::after { animation-duration: .01ms !important; transition: none !important; } }
+
+/* A consistent surface and form treatment across every account screen. */
+.auth-layout { --auth-bg: #f5f6f0; --auth-border: #dfe5dc; }
+.auth-story { border-right: 1px solid #355444; }
+.auth-story-content { padding-bottom: 24px; }
+.auth-header { height: 90px; }
+.auth-main-content { padding-top: 20px; padding-bottom: 36px; }
+.auth-card { max-width: 450px; padding: 34px; border: 1px solid var(--auth-border); border-radius: 20px; background: var(--auth-surface); box-shadow: 0 8px 35px #183d290a; }
+.auth-eyebrow { color: var(--auth-accent); font-size: 10px; letter-spacing: 1.6px; }
+.auth-card h1 { font-family: Georgia, 'Times New Roman', serif; font-weight: 500; font-size: 38px; letter-spacing: -1.2px; }
+.auth-input-wrap input { border-radius: 10px; height: 52px; }
+.auth-field > label { font-size: 13px; }
+.auth-primary { min-height: 52px; border-radius: 10px; }
+.auth-state-icon { border-radius: 16px; }
+.auth-card-footer { font-size: 13px; line-height: 1.7; }
+.auth-divider { font-size: 11px; }
+.auth-bottom { font-size: 11px; }
+@media (max-width: 1100px) and (min-width: 851px) {
+  .auth-main-content { padding-left: 22px; padding-right: 22px; }
+  .auth-card { padding: 28px; }
+}
+@media (max-width: 850px) {
+  .auth-header { height: 88px; }
+  .auth-main-content { padding: 20px 22px 42px; }
+  .auth-card { max-width: 470px; padding: 32px; }
+}
+@media (max-width: 440px) {
+  .auth-main-content { padding: 12px 16px 32px; }
+  .auth-card { padding: 26px 21px; border-radius: 16px; }
+  .auth-card h1 { font-size: 32px; }
+  .auth-header { padding: 0 20px; }
+  .auth-input-wrap input { font-size: 16px; }
+  .auth-description { line-height: 1.65; }
+  .auth-bottom { padding: 20px; flex-wrap: wrap; }
+}
+.auth-mobile-brand .auth-brand-caption { opacity: 1; color: var(--auth-muted); }

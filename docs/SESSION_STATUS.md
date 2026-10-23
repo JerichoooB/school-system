@@ -1,3 +1,13 @@
+# Latest update — whole-app UI polish
+
+- Refined all 13 portal pages through shared typography, ivory/sage surfaces, consistent cards, table headers/row states, page icons, controls, form actions, tabs, files, calendars and empty states.
+- Sidebar navigation scrolls independently while account, settings and support controls remain visible. Topbar stays available while scrolling. Mobile controls and spacing are responsive; reduced-motion preferences are respected.
+- Login/signup/recovery now have consistent card surfaces and forms. Public support shares the account layout and works in both themes; its original Formspree submission behavior is preserved.
+- Fixed keyboard access to scrollable calendars/tables and contrast issues found during accessibility review. Current user's avatar remains consistent across all locations.
+- Lint/build pass. 13 academic browser checks + 14 account browser checks pass. Coverage includes all 13 desktop portal pages, mobile student/admin pages, light/dark portal accessibility and all public screens at desktop/mobile in both themes. Public overflow checks also run at 320/390/768/1440px through the existing auth suite.
+- Screenshots reviewed outside Git under /workspace/schoolhub-ui-previews/polished. UI_REVIEW=1 regenerates portal captures during the academic browser suite.
+- Production verification follows deployment; no production account, school-policy or schema changes are part of this UI update.
+
 # Latest update — inline profile card editing
 
 - Moved Edit profile from the banner into Personal information. Editing renders a form inside the card, with Save/Cancel, busy state, validation and inline errors.

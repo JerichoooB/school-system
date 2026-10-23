@@ -49,7 +49,7 @@ export default function Calendar({ data, sectionLabel, timezone }) {
         </div>
       }
     >
-      <div className="sh-month-scroll">
+      <div className="sh-month-scroll" tabIndex={0} role="region" aria-label="Monthly schedule">
         <div className="sh-month">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
             <b key={d}>{d}</b>

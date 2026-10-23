@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { zonedISO, zonedInput } from "../../shared/time";
-import { X, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Search, ChevronLeft, ChevronRight, Inbox } from "lucide-react";
 export function Empty({ children = "No records yet." }) {
-  return <div className="sh-empty">{children}</div>;
+  return <div className="sh-empty"><Inbox size={28} strokeWidth={1.5} aria-hidden="true" /><p>{children}</p></div>;
 }
 export function Card({ title, action, children, className = "" }) {
   return (
@@ -81,7 +81,7 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
         <Empty>{empty}</Empty>
       ) : (
         <>
-          <div className="sh-table-wrap">
+          <div className="sh-table-wrap" tabIndex={0} role="region" aria-label="Table results">
             <table>
               <thead>
                 <tr>
