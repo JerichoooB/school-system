@@ -6,7 +6,7 @@
 - Fixed keyboard access to scrollable calendars/tables and contrast issues found during accessibility review. Current user's avatar remains consistent across all locations.
 - Lint/build pass. 13 academic browser checks + 14 account browser checks pass. Coverage includes all 13 desktop portal pages, mobile student/admin pages, light/dark portal accessibility and all public screens at desktop/mobile in both themes. Public overflow checks also run at 320/390/768/1440px through the existing auth suite.
 - Screenshots reviewed outside Git under /workspace/schoolhub-ui-previews/polished. UI_REVIEW=1 regenerates portal captures during the academic browser suite.
-- Production verification follows deployment; no production account, school-policy or schema changes are part of this UI update.
+- e2fcc274 is live. Deployed smoke checks passed database/session/role permissions, private Blob upload/download/deletion and anonymous denial, unauthorized job rejection, all 11 student pages and logout. Eleven sidebar switches completed in 807ms with no repeated session/school reads. Temporary test data was removed. No school-policy or schema changes are part of this UI update.
 
 # Latest update — inline profile card editing
 
