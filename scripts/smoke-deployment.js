@@ -73,7 +73,9 @@ try {
       true,
       "Account email configuration is missing.",
     );
-    if (!state.services.cronConfigured)
+    if (process.env.SMOKE_SKIP_CRON === "1") {
+      console.log("SKIP automatic cron configuration: deferred by operator");
+    } else if (!state.services.cronConfigured)
       configurationFailures.push(
         "CRON_SECRET is missing on the deployed function.",
       );

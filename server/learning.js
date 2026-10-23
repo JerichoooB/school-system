@@ -164,6 +164,17 @@ export async function mutateLearning(client, user, resource, b) {
         "UPDATE assessments SET archived=$2 WHERE id=$1 RETURNING *",
         [a.id, boolean(b.archived)],
       );
+      const activeWeight = (
+        await q(
+          "SELECT coalesce(sum(weight),0) AS weight FROM assessments WHERE section_id=$1 AND NOT archived AND category_id IS NOT DISTINCT FROM $2",
+          [a.section_id, a.category_id],
+        )
+      ).weight;
+      if (Number(activeWeight) > 100)
+        throw schoolError(
+          400,
+          "Restoring this assessment would exceed 100% of the grading weight.",
+        );
       await client.query(
         "UPDATE final_grades SET published=false WHERE section_id=$1",
         [a.section_id],

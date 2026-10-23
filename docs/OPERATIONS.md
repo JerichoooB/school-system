@@ -62,3 +62,9 @@ TEST_DATABASE_URL=postgresql://postgres@127.0.0.1:55432/school_hub_test npm run 
 ```
 
 Install Playwright Chromium with `npx playwright install chromium`, or supply a trusted `BROWSER_EXECUTABLE`. Academic tests use unique temporary schemas inside the explicit `_test` database and drop only their own schema. Authentication tests truncate auth records in the isolated test database, so do not run suites concurrently against the same test database. Provider tests mock Blob/SMTP/Formspree boundaries; those are contract/authorization tests, not evidence of live external delivery.
+
+## Explicit live academic check
+
+`LIVE_ACADEMIC_TEST=1 npm run test:live:academics` exercises the actual deployed academic APIs with unique temporary administrator/teacher/student accounts, classes, submissions and private files. Use a matching database connection and `SMOKE_BASE_URL`. The opt-in flag is required; this is never run by CI. It avoids global policy changes and external message delivery. Cleanup removes only its tagged records and accounts; a cleanup error disables the temporary accounts and exits unsuccessfully for operator attention. Do not run it concurrently with school administration of its clearly tagged QA records.
+
+`LIVE_VERIFY_GRADING_FIX=1` additionally verifies archived-assessment weight restoration and original-score limits. In proxy-only workspaces use `node --use-env-proxy --env-file-if-exists=.env.local scripts/smoke-academics.js` with the same opt-in variables. The ordinary deployment check supports `SMOKE_SKIP_CRON=1` to report automatic scheduling as explicitly deferred while testing other services; it does not change cron authentication or application configuration.

@@ -22,3 +22,5 @@ Useful commands:
 - SMOKE_BROWSER=1 BROWSER_EXECUTABLE=/tmp/chromium node --use-env-proxy --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-deployment.js
 
 Never print environment values, session cookies, database URLs or SMTP/Blob/cron secrets. Production smoke checks create only their own unique fixtures. Do not run destructive test suites against production. Browser access uses Node's TLS-verified fetch through the cloud proxy; do not disable TLS verification.
+
+Expanded verification work: the operator requested all features tested while leaving cron for later. Added an explicit live academic test, verified 98 live HTTP assertions with all temporary fixtures removed, and expanded policy/late-penalty/exemption/import validation checks. These exposed and fixed archived-assessment weight counting, restoration above 100%, and lowering maximum points below an existing original score. Local backend checks now total 31; automatic cron is deliberately skipped by the deployment check only when SMOKE_SKIP_CRON=1.

@@ -584,7 +584,7 @@ async function mutate(client, user, resource, b) {
         Number(
           (
             await client.query(
-              "SELECT sum(weight) AS weight FROM assessments WHERE section_id=$1 AND category_id IS NOT DISTINCT FROM $2",
+              "SELECT sum(weight) AS weight FROM assessments WHERE section_id=$1 AND NOT archived AND category_id IS NOT DISTINCT FROM $2",
               [s.id, assessment.category_id || null],
             )
           ).rows[0].weight,
@@ -595,7 +595,7 @@ async function mutate(client, user, resource, b) {
           "Assessment weights for this class cannot exceed 100%.",
         );
       const invalidScores = await client.query(
-        "SELECT 1 FROM scores WHERE assessment_id=$1 AND points>$2",
+        "SELECT 1 FROM scores WHERE assessment_id=$1 AND coalesce(raw_points,points)>$2",
         [assessment.id, assessment.points],
       );
       if (invalidScores.rowCount)

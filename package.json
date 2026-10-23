@@ -17,7 +17,8 @@
     "admin:grant": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/admin.js",
     "test:school:browser": "node --test tests/school-browser.js",
     "db:backup": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/backup.js",
-    "test:deployment": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-deployment.js"
+    "test:deployment": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-deployment.js",
+    "test:live:academics": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-academics.js"
   },
   "dependencies": {
     "@neon/config": "^1.9.3",

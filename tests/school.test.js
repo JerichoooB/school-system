@@ -822,3 +822,256 @@ test("timezone conversion preserves the configured school timezone and rejects D
     /does not exist/,
   );
 });
+
+test(
+  "school policies, late penalties, exemptions, missing work, atomic imports and request validation",
+  { skip: !enabled },
+  async () => {
+    const previous = (await api("admin")).school_settings;
+    const schoolPolicy = previous.find((p) => p.key === "school").value;
+    const gradePolicy = previous.find((p) => p.key === "grading").value;
+    try {
+      await create("admin", "school_settings", {
+        name: "QA School",
+        timezone: "Asia/Manila",
+        attendance_threshold: 80,
+      });
+      assert.equal(
+        (
+          await api("student", "school_settings", {
+            name: "Forbidden",
+            timezone: "UTC",
+            attendance_threshold: 0,
+          })
+        ).status,
+        403,
+      );
+      assert.equal(
+        (
+          await api("admin", "school_settings", {
+            name: "Bad zone",
+            timezone: "Not/AZone",
+            attendance_threshold: 80,
+          })
+        ).status,
+        400,
+      );
+      await create("admin", "grading_policy", {
+        ...gradePolicy,
+        late_penalty_percent: 10,
+        missing_as_zero: true,
+        late_counts_present: false,
+        exclude_excused: false,
+      });
+      const course = (await query("SELECT id FROM courses ORDER BY id LIMIT 1"))
+        .rows[0];
+      const term = (await query("SELECT id FROM terms ORDER BY id LIMIT 1"))
+        .rows[0];
+      const section = await create("admin", "sections", {
+        course_id: course.id,
+        term_id: term.id,
+        teacher_id: accounts.teacher.id,
+        name: "Extended QA",
+        capacity: 3,
+      });
+      await create("admin", "enrollments", {
+        section_id: section.id,
+        student_id: accounts.student.id,
+        status: "active",
+      });
+      const assignmentBody = {
+        section_id: section.id,
+        title: "Late assignment",
+        points: 100,
+        weight: 100,
+        instructions: "Test",
+        due_at: "2020-01-01T00:00:00Z",
+        allow_late: true,
+        published: true,
+      };
+      const assignment = await create("teacher", "assignments", assignmentBody);
+      const submission = await create("student", "submissions", {
+        assignment_id: assignment.id,
+        content: "Late work",
+      });
+      const scoreBody = {
+        assessment_id: assignment.assessment_id,
+        student_id: accounts.student.id,
+        points: 90,
+        published: true,
+      };
+      let score = await create("teacher", "scores", scoreBody);
+      assert.equal(Number(score.points), 80);
+      assert.equal(Number(score.raw_points), 90);
+      assert.equal(Number(score.late_penalty), 10);
+      await create("teacher", "scores", { ...scoreBody, exempt: true });
+      assert.equal(
+        (
+          await api("teacher", "final_grades", {
+            section_id: section.id,
+            student_id: accounts.student.id,
+            published: true,
+          })
+        ).status,
+        400,
+      );
+      await create("teacher", "scores", { ...scoreBody, exempt: false });
+      const criterion = await create("teacher", "rubrics", {
+        assignment_id: assignment.id,
+        title: "Correctness",
+        maximum: 100,
+      });
+      score = await create("teacher", "rubric_scores", {
+        submission_id: submission.id,
+        criteria: [{ id: criterion.id, points: 90 }],
+        published: true,
+      });
+      assert.equal(Number(score.points), 80);
+      await create("teacher", "assignments", {
+        ...assignmentBody,
+        id: assignment.id,
+        weight: 50,
+      });
+      const missing = await create("teacher", "assessments", {
+        section_id: section.id,
+        title: "Missing work",
+        points: 100,
+        weight: 50,
+        published: true,
+      });
+      const final = await create("teacher", "final_grades", {
+        section_id: section.id,
+        student_id: accounts.student.id,
+        published: true,
+      });
+      assert.equal(Number(final.percentage), 40);
+      await create("teacher", "assessment_archive", {
+        id: missing.id,
+        archived: true,
+      });
+      assert.equal(
+        (
+          await api("teacher", "final_grades", {
+            section_id: section.id,
+            student_id: accounts.student.id,
+          })
+        ).status,
+        400,
+      );
+      await create("teacher", "assignments", {
+        ...assignmentBody,
+        id: assignment.id,
+        weight: 100,
+      });
+      assert.equal(
+        Number(
+          (
+            await create("teacher", "final_grades", {
+              section_id: section.id,
+              student_id: accounts.student.id,
+              published: true,
+            })
+          ).percentage,
+        ),
+        80,
+      );
+      assert.equal(
+        (
+          await api("teacher", "assessment_archive", {
+            id: missing.id,
+            archived: false,
+          })
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await api("teacher", "assignments", {
+            ...assignmentBody,
+            id: assignment.id,
+            points: 80,
+          })
+        ).status,
+        400,
+      );
+      const name = (
+        await query("SELECT name FROM users WHERE id=$1", [accounts.student.id])
+      ).rows[0].name;
+      assert.equal(
+        (
+          await api("admin", "import_people", {
+            rows: [
+              {
+                email: "student@example.test",
+                name: "Must roll back",
+                role: "student",
+              },
+              {
+                email: "missing-second@example.test",
+                name: "Missing account",
+                role: "student",
+              },
+            ],
+          })
+        ).status,
+        400,
+      );
+      assert.equal(
+        (
+          await query("SELECT name FROM users WHERE id=$1", [
+            accounts.student.id,
+          ])
+        ).rows[0].name,
+        name,
+      );
+      const oldNumber = (await api("student")).profile[0].student_number;
+      await create("student", "profile", {
+        name,
+        role: "admin",
+        student_number: "FORGED",
+        year_level: 8,
+      });
+      const protectedState = await api("student");
+      assert.equal(protectedState.user.role, "student");
+      assert.equal(protectedState.profile[0].student_number, oldNumber);
+      const crossOrigin = await fetch(`${base}/api/school?resource=profile`, {
+        method: "POST",
+        headers: {
+          Cookie: accounts.student.cookie,
+          Origin: "https://attacker.example",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: "Forbidden" }),
+      });
+      assert.equal(crossOrigin.status, 403);
+      const malformed = await fetch(`${base}/api/school`, {
+        method: "POST",
+        headers: {
+          Cookie: accounts.student.cookie,
+          "Content-Type": "application/json",
+        },
+        body: "{broken",
+      });
+      assert.equal(malformed.status, 400);
+      const large = await fetch(`${base}/api/school`, {
+        method: "POST",
+        headers: {
+          Cookie: accounts.student.cookie,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ value: "x".repeat(132000) }),
+      });
+      assert.equal(large.status, 413);
+      const state = await api("student");
+      assert.ok(state.sessions.length);
+      await create("student", "sessions", { id: state.sessions[0].id });
+      assert.equal((await api("student")).status, 401);
+    } finally {
+      await create("admin", "school_settings", schoolPolicy);
+      await create("admin", "grading_policy", {
+        ...gradePolicy,
+        late_penalty_percent: gradePolicy.late_penalty_percent || 0,
+      });
+    }
+  },
+);
