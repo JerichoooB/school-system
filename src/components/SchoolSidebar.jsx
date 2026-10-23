@@ -19,7 +19,7 @@ import {
     GraduationCap,
 } from "lucide-react";
 
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 
 import "../styles/SchoolSidebar.css";
 
@@ -264,7 +264,16 @@ function SchoolSidebar({
        LOGOUT
     ===================================================== */
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        try {
+            const response = await fetch("/api/logout", { method: "POST" });
+            if (!response.ok) throw new Error("Logout failed");
+        } catch {
+            alert("Unable to sign out. Please try again.");
+            return;
+        }
+        localStorage.removeItem("user");
+        localStorage.removeItem("isAuthenticated");
         if (onMobileClose) {
             onMobileClose();
         }

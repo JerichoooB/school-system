@@ -4,28 +4,48 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -n api,web \"npm:dev:api\" \"npm:dev:web\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:api": "node --env-file-if-exists=.env.local --env-file-if-exists=.env --watch server/dev.js",
+    "dev:web": "vite --host 0.0.0.0 --port 5173 --strictPort",
+    "db:migrate": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/migrate.js",
+    "test": "node --env-file-if-exists=.env.local --env-file-if-exists=.env --test tests/*.test.js",
+    "test:smoke": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/smoke-postgres.js",
+    "test:browser": "node --test tests/browser-smoke.js"
   },
   "dependencies": {
+    "@neon/config": "^1.9.3",
+    "@neon/env": "^1.6.4",
+    "@neondatabase/serverless": "^1.2.0",
     "@react-oauth/google": "^0.13.5",
+    "@vercel/functions": "^3.10.3",
+    "bcryptjs": "^3.0.3",
+    "google-auth-library": "^11.3.1",
+    "https-proxy-agent": "^9.1.0",
     "lucide-react": "^1.33.0",
+    "pg": "^8.23.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-icons": "^5.7.0",
-    "react-router-dom": "^7.18.2"
+    "react-router-dom": "^7.18.2",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "concurrently": "^10.0.6",
     "eslint": "^10.8.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
+    "playwright": "^1.64.1",
     "vite": "^8.2.0"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

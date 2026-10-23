@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 
 import "../styles/signup.css";
 
@@ -61,14 +61,10 @@ function Signup() {
 
         event.preventDefault();
 
-        console.log("1. HANDLE SUBMIT STARTED");
-
 
         // PASSWORD MATCH
 
         if (formData.password !== formData.confirmPassword) {
-
-            console.log("2. PASSWORDS DON'T MATCH");
 
             alert("Passwords do not match.");
 
@@ -80,25 +76,14 @@ function Signup() {
 
         if (formData.password.length < 8) {
 
-            console.log("3. PASSWORD TOO SHORT");
-
             alert("Password must be at least 8 characters.");
 
             return;
         }
 
 
-        console.log("4. VALIDATION PASSED");
-
-
         const fullName =
             `${formData.firstName} ${formData.lastName}`;
-
-
-        console.log("5. ABOUT TO SEND:", {
-            name: fullName,
-            email: formData.email
-        });
 
 
         setLoading(true);
@@ -106,12 +91,8 @@ function Signup() {
 
         try {
 
-            console.log("6. FETCH STARTING");
 
-
-            const apiUrl = import.meta.env.DEV
-                ? "http://localhost/school-system/backend/api/register.php"
-                : "/backend/api/register.php";
+            const apiUrl = "/api/register";
 
 
             const response = await fetch(
@@ -132,21 +113,7 @@ function Signup() {
             );
 
 
-            console.log("7. FETCH FINISHED");
-
-            console.log(
-                "Response status:",
-                response.status
-            );
-
-
             const result = await response.json();
-
-
-            console.log(
-                "8. PHP RESPONSE:",
-                result
-            );
 
 
             // ==========================================
@@ -154,14 +121,6 @@ function Signup() {
             // ==========================================
 
             if (result.success) {
-
-                console.log(
-                    "9. REGISTRATION SUCCESS"
-                );
-
-                console.log(
-                    "10. SHOWING VERIFICATION FORM"
-                );
 
 
                 // Show verification form
@@ -175,6 +134,8 @@ function Signup() {
                 return;
             }
 
+
+            if (response.status === 409) setVerificationMode(true);
 
             // ==========================================
             // REGISTRATION FAILED
@@ -234,25 +195,12 @@ function Signup() {
         }
 
 
-        console.log(
-            "VERIFYING EMAIL:",
-            formData.email
-        );
-
-        console.log(
-            "VERIFICATION CODE:",
-            verificationCode
-        );
-
-
         setVerifying(true);
 
 
         try {
 
-            const apiUrl = import.meta.env.DEV
-                ? "http://localhost/school-system/backend/api/verify-email.php"
-                : "/backend/api/verify-email.php";
+            const apiUrl = "/api/verify-email";
 
 
             const response = await fetch(
@@ -272,19 +220,7 @@ function Signup() {
             );
 
 
-            console.log(
-                "VERIFY RESPONSE STATUS:",
-                response.status
-            );
-
-
             const result = await response.json();
-
-
-            console.log(
-                "VERIFY PHP RESPONSE:",
-                result
-            );
 
 
             if (result.success) {
@@ -330,13 +266,21 @@ function Signup() {
     // RESEND VERIFICATION CODE
     // ==========================================
 
+
+
+
     async function handleResendCode() {
-
-        alert(
-            "For now, submit the signup form again to generate a new verification code."
-        );
+        setVerifying(true);
+        try {
+            const response = await fetch('/api/resend-verification', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email }),
+            });
+            const result = await response.json();
+            alert(result.message);
+        } catch { alert('Unable to request a new code. Please try again.'); }
+        finally { setVerifying(false); }
     }
-
 
     return (
 
@@ -695,6 +639,7 @@ function Signup() {
                             </form>
 
 
+                            <button type="button" disabled={verifying} onClick={handleResendCode}>Resend verification code</button>
                             {/* BACK TO SIGN IN */}
 
                             <p className="already-account">

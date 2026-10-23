@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Support from "./pages/Support";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
@@ -20,6 +21,7 @@ function App() {
             <BrowserRouter>
 
                 <Routes>
+                    <Route path="/support" element={<Support />} />
 
                     <Route
                         path="/"

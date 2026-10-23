@@ -23,7 +23,7 @@ import {
     UserRound,
 } from "lucide-react";
 
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 import SchoolSidebar from "../components/SchoolSidebar";
 
 import "../styles/dashboard.css";

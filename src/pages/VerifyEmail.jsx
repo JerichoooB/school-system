@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Mail } from "lucide-react";
 
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 
 import "../styles/signup.css";
 
@@ -51,14 +51,7 @@ function VerifyEmail() {
 
         try {
 
-            const apiUrl = import.meta.env.DEV
-                ? "http://localhost/school-system/backend/api/verify-email.php"
-                : "/backend/api/verify-email.php";
-
-
-            console.log("VERIFY EMAIL STARTED");
-            console.log("EMAIL:", email);
-            console.log("VERIFY API:", apiUrl);
+            const apiUrl = "/api/verify-email";
 
 
             const response = await fetch(
@@ -78,19 +71,7 @@ function VerifyEmail() {
             );
 
 
-            console.log(
-                "VERIFY RESPONSE STATUS:",
-                response.status
-            );
-
-
             const result = await response.json();
-
-
-            console.log(
-                "VERIFY PHP RESPONSE:",
-                result
-            );
 
 
             if (result.success) {

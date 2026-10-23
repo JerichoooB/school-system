@@ -24,6 +24,8 @@ function InputField({
             <input
                 type={type}
                 name={name}
+                autoComplete={name === "email" ? "username" : "current-password"}
+                aria-label={name === "email" ? "Email address" : "Password"}
                 placeholder={placeholder}
                 value={value}
                 onChange={onChange}

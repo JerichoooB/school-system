@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 
 import {
     Eye,
@@ -20,6 +20,7 @@ import Divider from "../components/Divider";
 function Login() {
 
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const { darkMode, toggleTheme } = useTheme();
@@ -48,28 +49,19 @@ function Login() {
     async function handleLogin(event) {
 
         event.preventDefault();
-
-        console.log("1. LOGIN STARTED");
+        if (loading) return;
 
         if (!formData.email || !formData.password) {
             alert("Please enter your email and password.");
             return;
         }
 
-        console.log("2. SENDING LOGIN:", {
-            email: formData.email
-        });
 
-
+        setLoading(true);
         try {
 
-            // LOCAL vs ONLINE API
-            const apiUrl = import.meta.env.DEV
-                ? "http://localhost/school-system/backend/api/login.php"
-                : "https://schoolhub.infinityfreeapp.com/backend/api/login.php";
-
-
-            console.log("LOGIN API URL:", apiUrl);
+            // Same-origin API for local development and Vercel.
+            const apiUrl = "/api/login";
 
 
             const response = await fetch(
@@ -89,19 +81,7 @@ function Login() {
             );
 
 
-            console.log(
-                "3. RESPONSE STATUS:",
-                response.status
-            );
-
-
             const result = await response.json();
-
-
-            console.log(
-                "4. PHP RESPONSE:",
-                result
-            );
 
 
             if (result.success) {
@@ -137,6 +117,8 @@ navigate("/dashboard");
                 "Unable to connect to the server."
             );
 
+        } finally {
+            setLoading(false);
         }
 
     }
@@ -149,28 +131,10 @@ navigate("/dashboard");
     async function handleGoogleSuccess(
         credentialResponse
     ) {
-
-        console.log(
-            "GOOGLE LOGIN SUCCESS"
-        );
-
-        console.log(
-            "GOOGLE CREDENTIAL RECEIVED"
-        );
-
-
+        if (loading) return;
+        setLoading(true);
         try {
-
-            // LOCAL vs ONLINE API
-            const apiUrl = import.meta.env.DEV
-                ? "http://localhost/school-system/backend/api/google-login.php"
-                : "/backend/api/google-login.php";
-
-
-            console.log(
-                "GOOGLE API URL:",
-                apiUrl
-            );
+            const apiUrl = "/api/google-login";
 
 
             const response = await fetch(
@@ -190,29 +154,7 @@ navigate("/dashboard");
             );
 
 
-            console.log(
-                "GOOGLE PHP RESPONSE STATUS:",
-                response.status
-            );
-
-
             const result = await response.json();
-
-
-            console.log(
-                "GOOGLE PHP SUCCESS:",
-                result.success
-            );
-
-            console.log(
-                "GOOGLE PHP MESSAGE:",
-                result.message
-            );
-
-            console.log(
-                "GOOGLE PHP USER:",
-                result.user
-            );
 
 
             if (result.success) {
@@ -242,6 +184,8 @@ navigate("/dashboard");
                 "Unable to connect to the server."
             );
 
+        } finally {
+            setLoading(false);
         }
 
     }
@@ -274,6 +218,7 @@ navigate("/dashboard");
                 <button
                     className="theme-button"
                     type="button"
+                    aria-label="Toggle theme"
                     onClick={toggleTheme}
                 >
 
@@ -351,6 +296,7 @@ navigate("/dashboard");
                             <button
                                 type="button"
                                 className="password-toggle"
+                                aria-label={showPassword ? "Hide password" : "Show password"}
                                 onClick={() =>
                                     setShowPassword(
                                         !showPassword
@@ -394,66 +340,33 @@ navigate("/dashboard");
                         <button
                             className="signin-button"
                             type="submit"
+                            disabled={loading}
+                            aria-busy={loading}
                         >
-                            Sign in
+                            {loading ? "Signing in…" : "Sign in"}
                         </button>
 
 
                     </form>
+                        <a href="/support">Need help? Contact support</a>
 
 
 
-                    {/* GOOGLE */}
-
-                    <Divider />
-
-
-                    <div className="google-login-wrapper">
-
-                        {/* YOUR VISUAL BUTTON */}
-
-                        <div className="custom-google-button">
-
-                            <div className="google-logo">
-                                G
-                            </div>
-
-                            <span>
-                                Continue with Google
-                            </span>
-
-                        </div>
-
-
-                        {/* GOOGLE AUTHENTICATION BUTTON */}
-
-                        <div className="google-auth-overlay">
-
+                    {/* Use Google's visible, accessible button only when configured. */}
+                    {import.meta.env.VITE_GOOGLE_CLIENT_ID && <>
+                        <Divider />
+                        <div className="google-login-wrapper" aria-busy={loading} inert={loading ? true : undefined}>
                             <GoogleLogin
                                 locale="en"
                                 text="continue_with"
-                                width="430"
-                                onSuccess={
-                                    handleGoogleSuccess
-                                }
-                                onError={() => {
-
-                                    console.error(
-                                        "GOOGLE LOGIN FAILED"
-                                    );
-
-                                    alert(
-                                        "Google sign-in failed."
-                                    );
-
-                                }}
+                                theme={darkMode ? "filled_black" : "outline"}
+                                size="large"
+                                width="300"
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => alert("Google sign-in failed. Please try again.")}
                             />
-
                         </div>
-
-                    </div>
-
-
+                    </>}
 
                     {/* SIGN UP */}
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Sun, Moon } from "lucide-react";
 
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 
 import "../styles/login.css";
 
@@ -29,192 +29,28 @@ function ForgotPassword() {
     // =========================
 
     async function handleSubmit(event) {
-
         event.preventDefault();
-
-        console.log("1. FORGOT PASSWORD STARTED");
-        console.log("2. EMAIL:", email);
-
-
+        if (loading) return;
         if (!email) {
-
-            alert(
-                "Please enter your email address."
-            );
-
+            alert("Please enter your email address.");
             return;
         }
-
-
         setLoading(true);
-
-
         try {
-
-            const formData = new URLSearchParams();
-
-            formData.append(
-                "email",
-                email
-            );
-
-
-            // =========================
-            // LOCAL vs ONLINE API
-            // =========================
-
-            const apiUrl = import.meta.env.DEV
-                ? "http://localhost/school-system/backend/api/forgot-password.php"
-                : "https://schoolhub.infinityfreeapp.com/backend/api/forgot-password.php";
-
-
-            console.log(
-                "3. API URL:",
-                apiUrl
-            );
-
-
-            // =========================
-            // SEND REQUEST
-            // =========================
-
-            const response = await fetch(
-                apiUrl,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/x-www-form-urlencoded",
-                    },
-
-                    body:
-                        formData.toString(),
-                }
-            );
-
-
-            console.log(
-                "4. RESPONSE STATUS:",
-                response.status
-            );
-
-
-            // =========================
-            // READ PHP RESPONSE
-            // =========================
-
-            const text =
-                await response.text();
-
-
-            console.log(
-                "5. RAW PHP RESPONSE:",
-                text
-            );
-
-
-            // Remove accidental code fences
-            const cleanText = text
-                .replace(
-                    /^```php\s*/i,
-                    ""
-                )
-                .replace(
-                    /^```\s*/i,
-                    ""
-                )
-                .replace(
-                    /\s*```$/i,
-                    ""
-                )
-                .trim();
-
-
-            console.log(
-                "6. CLEAN PHP RESPONSE:",
-                cleanText
-            );
-
-
-            let data;
-
-
-            try {
-
-                data =
-                    JSON.parse(cleanText);
-
-            } catch (jsonError) {
-
-                console.error(
-                    "7. INVALID JSON FROM PHP:",
-                    jsonError
-                );
-
-                console.error(
-                    "PHP RESPONSE WAS:",
-                    cleanText
-                );
-
-
-                alert(
-                    "The server returned an invalid response. Check the PHP file."
-                );
-
-                return;
-            }
-
-
-            console.log(
-                "8. PHP RESPONSE:",
-                data
-            );
-
-
-            // =========================
-            // SUCCESS
-            // =========================
-
-            if (data.success) {
-
-                alert(
-                    data.message
-                );
-
-                setEmail("");
-
-            } else {
-
-                alert(
-                    data.message ||
-                    "Unable to send password reset email."
-                );
-
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "9. FORGOT PASSWORD ERROR:",
-                error
-            );
-
-
-            alert(
-                "Unable to connect to the server."
-            );
-
-
+            const response = await fetch("/api/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const result = await response.json();
+            alert(result.message || "Unable to request a password reset.");
+            if (result.success) setEmail("");
+        } catch {
+            alert("Unable to connect to the server. Please try again.");
         } finally {
-
             setLoading(false);
-
         }
-
     }
-
 
     return (
 

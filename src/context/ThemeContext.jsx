@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-const ThemeContext = createContext();
+import { ThemeContext } from "./theme.js";
 
 export function ThemeProvider({ children }) {
 
@@ -48,11 +48,4 @@ export function ThemeProvider({ children }) {
             {children}
         </ThemeContext.Provider>
     );
-}
-
-
-export function useTheme() {
-
-    return useContext(ThemeContext);
-
 }

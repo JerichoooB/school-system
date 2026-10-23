@@ -1,0 +1,8 @@
+.git
+.env*
+!.env.example
+tests
+generated_images
+
+# Obsolete PHP dependency leftovers
+vendor/

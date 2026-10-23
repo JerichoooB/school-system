@@ -9,7 +9,7 @@ import {
     Moon
 } from "lucide-react";
 
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/useTheme";
 
 import "../styles/login.css";
 
@@ -53,16 +53,6 @@ function ResetPassword() {
     async function handleSubmit(event) {
 
         event.preventDefault();
-
-
-        console.log(
-            "1. RESET PASSWORD STARTED"
-        );
-
-        console.log(
-            "2. TOKEN:",
-            token
-        );
 
 
 
@@ -112,25 +102,13 @@ function ResetPassword() {
 
         try {
 
-            console.log(
-                "3. SENDING RESET REQUEST"
-            );
-
 
 
             // =========================
             // LOCAL vs ONLINE API
             // =========================
 
-            const apiUrl = import.meta.env.DEV
-                ? "http://localhost/school-system/backend/api/reset-password.php"
-                : "https://schoolhub.infinityfreeapp.com/backend/api/reset-password.php";
-
-
-            console.log(
-                "RESET PASSWORD API URL:",
-                apiUrl
-            );
+            const apiUrl = "/api/reset-password";
 
 
 
@@ -159,13 +137,6 @@ function ResetPassword() {
 
 
 
-            console.log(
-                "4. RESPONSE STATUS:",
-                response.status
-            );
-
-
-
             // =========================
             // READ RESPONSE
             // =========================
@@ -174,21 +145,9 @@ function ResetPassword() {
                 await response.text();
 
 
-            console.log(
-                "5. RAW PHP RESPONSE:",
-                text
-            );
-
-
 
             const data =
                 JSON.parse(text);
-
-
-            console.log(
-                "6. PHP RESPONSE:",
-                data
-            );
 
 
 
