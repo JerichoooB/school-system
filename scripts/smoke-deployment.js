@@ -191,7 +191,7 @@ try {
           "profile", "courses", "schedule", "grades", "attendance",
           "assignments", "announcements", "exams", "settings", "help", "dashboard",
         ]) {
-          await page.locator(`.sh-sidebar a[href="/${path}"]`).click();
+          await page.locator(`.sh-sidebar a[href="/${path}"]:not(.sh-brand)`).click();
           await page.waitForURL(`${base}/${path}`);
           const title = path === "help" ? "Help & Support" : path[0].toUpperCase() + path.slice(1);
           await page.getByRole("heading", {name: title, exact: true, level: 1}).waitFor();

@@ -5,7 +5,7 @@
 - Vercel functions configured for sin1 (Singapore), near the production Neon host in ap-southeast-1.
 - Lint/build pass. 12 academic browser checks and 13 auth browser checks pass, including no-repeat-read navigation and background revocation regression tests.
 - Live smoke script now checks sidebar navigation rather than doing a full document reload per page, and reports elapsed navigation time plus zero repeated workspace/session reads.
-- Production navigation verification pending deployment of this change.
+- Production verification passed after 879fcede deployed: 11 real sidebar switches completed in 708ms total, with zero repeated session/school GETs. Database/session/role/Blob/job-denial/logout checks also passed; temporary account and file were removed. An initial smoke attempt found an ambiguous test selector matching both the logo and Dashboard link; the selector was corrected and the full check passed.
 - Operator confirmed both cron announcement email delivery and Formspree support receipt. Local production dump restored successfully into a disposable Windows database: 43 tables. Neon history window remains 6 hours. Blob store is private and currently empty. UptimeRobot reports Up. Regular backup scheduling remains outstanding.
 
 # Resume checkpoint — live verification completed
