@@ -1030,3 +1030,8 @@
   .sh-notification-panel { right: 12px; width: calc(100vw - 24px); padding: 18px; }
   .sh-notification-tools { flex-wrap: wrap; }
 }
+.sh-setup-note { padding: 18px 22px; margin-bottom: 22px; background: var(--sage); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; }
+.sh-setup-note ul { margin: 8px 0 0; padding-left: 20px; }
+.sh-setup-note a { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.sh-section-title { margin: 28px 0 16px !important; }
+.sh-main p a { text-decoration: underline; text-underline-offset: 3px; }

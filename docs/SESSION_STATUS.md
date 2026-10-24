@@ -1,3 +1,12 @@
+# Latest fix — distinguish creation from assignment
+
+- Courses now has a prominent inline Create course form for code, name, optional description, credits and optional department, separate from Create class.
+- Class assignment shows course codes/names and is disabled with explicit setup steps when courses, terms or active teachers are missing.
+- Teachers/Students now have named invitation forms asking for name/email and fixing the intended role automatically. Optional name personalizes the secure invitation; recipients still create/verify their own account and accept the role. Existing account imports and teacher-department assignment are separately labeled.
+- Academic setup tabs/actions use readable names (Rooms/Add room, Academic years, etc.). Existing accounts link to Settings for explicit role management.
+- No schema migration. Lint/build, 31 backend tests and all 18 academic browser checks pass, including course creation, subsequent class selection, missing-teacher guidance and named role-specific invitation delivery (mock SMTP only).
+- Browser fixture schemas from interrupted local diagnostic runs were cleaned after testing. Production deployment verification pending.
+
 # Latest update — mobile navigation, tables and notification center
 
 - Added mobile quick navigation for Dashboard/Courses/Schedule/Profile, safe-area spacing and active destination states. Added a keyboard skip-to-content link.

@@ -1,4 +1,4 @@
-import { test, before, after } from "node:test";
+import { test, before, after, mock } from "node:test";
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { readFile, readdir, mkdir } from "node:fs/promises";
@@ -262,6 +262,48 @@ test("approved school screens and role workflows work in a real browser", async 
     await page.locator('.sh-main h1').click();
     assert.equal(await center.count(),0);
   });
+  await t.test("new courses and teacher invitations are distinct from class assignment", async () => {
+    await open('courses');
+    const catalog=page.locator('.sh-card').filter({has:page.getByRole('heading',{name:'Course catalog',exact:true})});
+    await catalog.getByRole('button',{name:'Create course',exact:true}).click();
+    await catalog.getByLabel('Course code',{exact:true}).fill('CS202');
+    await catalog.getByLabel('Course name',{exact:true}).fill('New catalog course');
+    await catalog.getByLabel('Description (optional)',{exact:true}).fill('Created as a subject, before assigning a class.');
+    await catalog.getByRole('form',{name:'Edit course catalog',exact:true}).getByRole('button',{name:'Create course',exact:true}).click();
+    await catalog.getByRole('form',{name:'Edit course catalog',exact:true}).waitFor({state:'hidden'});
+    await catalog.getByRole('button',{name:'Create course',exact:true}).waitFor();
+    assert.equal((await query("SELECT name FROM courses WHERE code='CS202'")).rows[0].name,'New catalog course');
+    await page.getByRole('button',{name:'Create class',exact:true}).click();
+    await page.getByRole('dialog').getByLabel('Course',{exact:true}).selectOption({label:'CS202 · New catalog course'});
+    await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
+    await query("UPDATE users SET status='inactive' WHERE id=$1",[users.teacher.id]);
+    try {
+      await open('courses');
+      assert.equal(await page.getByRole('button',{name:'Create class',exact:true}).isDisabled(),true);
+      await page.getByRole('link',{name:'Invite a teacher',exact:true}).waitFor();
+    } finally { await query("UPDATE users SET status='active' WHERE id=$1",[users.teacher.id]); }
+    const previous=Object.fromEntries(['MAIL_PROVIDER','GMAIL_USER','GMAIL_APP_PASSWORD'].map(k=>[k,process.env[k]]));
+    Object.assign(process.env,{MAIL_PROVIDER:'gmail',GMAIL_USER:'sender@example.test',GMAIL_APP_PASSWORD:'abcdefghijklmnop'});
+    const {default:nodemailer}=await import('nodemailer');
+    const delivered=[];
+    const smtp=mock.method(nodemailer,'createTransport',()=>({async sendMail(message){delivered.push(message);return {accepted:[message.to]};}}));
+    try {
+      await open('teachers');
+      await page.getByRole('button',{name:'Invite teacher',exact:true}).click();
+      const invite=page.getByRole('form',{name:'Edit invite a new teacher',exact:true});
+      await invite.getByLabel('Full name (optional)',{exact:true}).fill('New Faculty');
+      await invite.getByLabel('Email address',{exact:true}).fill('new-faculty@example.test');
+      assert.equal(await invite.locator('select').count(),0);
+      await invite.getByRole('button',{name:'Send invitation',exact:true}).click();
+      await page.getByRole('button',{name:'Invite teacher',exact:true}).waitFor();
+      assert.equal((await query("SELECT role FROM invitations WHERE email='new-faculty@example.test'")).rows[0].role,'teacher');
+      assert.match(delivered[0].text,/Hello New Faculty/);
+      assert.match(delivered[0].text,/invited as a teacher/);
+    } finally {
+      smtp.mock.restore();
+      for(const [key,value] of Object.entries(previous)) {if(value===undefined) delete process.env[key];else process.env[key]=value;}
+    }
+  });
   await t.test("sidebar navigation reuses the workspace without session or data reloads", async () => {
     await open("dashboard");
     await page.locator(".sh-app").evaluate(el => { el.dataset.navigationCheck = "persisted"; });
@@ -305,9 +347,9 @@ test("approved school screens and role workflows work in a real browser", async 
     "administrator creates a room through the academic setup form",
     async () => {
       await open("courses");
-      await page.getByRole("button", { name: "rooms", exact: true }).click();
+      await page.getByRole("button", { name: "Rooms", exact: true }).click();
       await page
-        .getByRole("button", { name: "Add record", exact: true })
+        .getByRole("button", { name: "Add room", exact: true })
         .click();
       await page.getByLabel("Room name", { exact: true }).fill("Lab 101");
       await page.getByLabel("Capacity", { exact: true }).fill("30");

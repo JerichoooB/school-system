@@ -96,6 +96,13 @@ const stamp = (value, zone = "Asia/Manila") =>
       }).format(new Date(value))
     : "—";
 const day = (value) => (value ? String(value).slice(0, 10) : "—");
+const courseFields = (departments) => [
+  field("code", "Course code", "text", {help:"A unique code, for example CS101."}),
+  field("name", "Course name"),
+  field("description", "Description", "textarea", {optional:true}),
+  field("credits", "Credits", "number", {min:0.1,max:30,step:0.1}),
+  select("department_id", "Department", departments, "name", {optional:true}),
+];
 export default function Portal() {
   const location = useLocation(),
     navigate = useNavigate();
@@ -375,8 +382,8 @@ export default function Portal() {
       Export CSV
     </button>
   );
-  const add = (label, handler) => (
-    <button className="sh-primary" onClick={handler}>
+  const add = (label, handler, disabled = false) => (
+    <button className="sh-primary" onClick={handler} disabled={disabled}>
       <Plus size={16} />
       {label}
     </button>
@@ -607,8 +614,23 @@ export default function Portal() {
   }
   function renderCourses() {
     const selected = data.sections.find((s) => same(s.id, selectedCourse));
+    const classReady = data.courses.length > 0 && data.terms.length > 0 && data.people.some(p => p.role === "teacher" && p.status === "active");
     return (
       <>
+        {isAdmin && <EditableSection title="Course catalog" label="Create course" submitLabel="Create course"
+          fields={courseFields(data.departments)} initial={{credits:3}}
+          onSave={(values) => save("courses", values)}>
+          <p>Create a new subject by entering its code, name and credits. You can assign a teacher and term afterward by creating a class section.</p>
+        </EditableSection>}
+        {isAdmin && !classReady && <div className="sh-setup-note">
+          <strong>Before you create a class</strong>
+          <ul>
+            {!data.courses.length && <li>Create your first course using the form above.</li>}
+            {!data.terms.length && <li>Add an academic term under Academic setup below.</li>}
+            {!data.people.some(p => p.role === "teacher" && p.status === "active") && <li><Link to="/teachers">Invite a teacher</Link>. They can be assigned after accepting their invitation.</li>}
+          </ul>
+        </div>}
+        {isAdmin && <h2 className="sh-section-title">Class sections</h2>}
         <div className="sh-toolbar">
           <label className="sh-search">
             <input
@@ -621,7 +643,7 @@ export default function Portal() {
           {isAdmin &&
             add("Create class", () =>
               edit("sections", "Create class", [
-                select("course_id", "Course", data.courses),
+                select("course_id", "Course", data.courses.map(c => ({...c,name:`${c.code} · ${c.name}`}))),
                 select("term_id", "Term", data.terms),
                 select(
                   "teacher_id",
@@ -632,7 +654,8 @@ export default function Portal() {
                 ),
                 field("name", "Section name"),
                 field("capacity", "Capacity", "number", { min: 1, max: 10000 }),
-              ]),
+              ], {capacity:30}),
+              !classReady,
             )}
         </div>
         {selected ? (
@@ -1748,8 +1771,7 @@ export default function Portal() {
           <Stat label="Programs" value={data.programs.length} />
         </div>
         <p className="sh-muted">
-          New users sign up and verify their email first. Administrators can
-          assign roles and official academic details below.
+          Invite new people above. Existing accounts can be assigned roles through <Link to="/settings">Settings → Account administration</Link>. Department and class assignments use teachers who have already joined.
         </p>
         <Card
           title={role === "student" ? "Student directory" : "Teacher directory"}
@@ -2381,27 +2403,20 @@ function AcademicSetup({ data, edit }) {
       field("name", "Room name"),
       field("capacity", "Capacity", "number", { min: 1, max: 10000 }),
     ],
-    courses: [
-      field("code", "Course code"),
-      field("name", "Course name"),
-      field("credits", "Credits", "number", { min: 0.1, max: 30, step: 0.1 }),
-      field("description", "Description", "textarea", { optional: true }),
-      select("department_id", "Department", data.departments, "name", {
-        optional: true,
-      }),
-    ],
+    courses: courseFields(data.departments),
   };
+  const labels = {academic_years:"Academic years",departments:"Departments",programs:"Programs",terms:"Terms",rooms:"Rooms",courses:"Courses"};
   return (
     <Card
       title="Academic setup"
       action={
         <button
           onClick={() =>
-            edit(tab, `Add ${tab.replace(/s$/, "")}`, definitions[tab])
+            edit(tab, `Add ${labels[tab].replace(/s$/, "").toLowerCase()}`, definitions[tab], tab === "courses" ? {credits:3} : {})
           }
         >
           <Plus size={16} />
-          Add record
+          Add {labels[tab].replace(/s$/, "").toLowerCase()}
         </button>
       }
     >
@@ -2412,7 +2427,7 @@ function AcademicSetup({ data, edit }) {
             onClick={() => setTab(t)}
             key={t}
           >
-            {t}
+            {labels[t]}
           </button>
         ))}
       </div>

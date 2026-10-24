@@ -153,17 +153,17 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
     </>
   );
 }
-export function EditableSection({ title, label, fields, initial, onSave, children, canEdit = true, card = true }) {
+export function EditableSection({ title, label, fields, initial, onSave, children, canEdit = true, card = true, submitLabel = "Save changes" }) {
   const [editing, setEditing] = useState(false);
   const action = canEdit && !editing && <button onClick={() => setEditing(true)}>{label || `Edit ${title.toLowerCase()}`}</button>;
   const content = editing ? (
-    <FormDialog inline title={title} fields={fields} initial={initial} onSave={onSave} onClose={() => setEditing(false)} />
+    <FormDialog inline submitLabel={submitLabel} title={title} fields={fields} initial={initial} onSave={onSave} onClose={() => setEditing(false)} />
   ) : children;
   return card ? <Card title={title} action={action}>{content}</Card> : (
     <div className="sh-inline-section">{action}{content}</div>
   );
 }
-export function FormDialog({ title, fields, initial = {}, onClose, onSave, inline = false }) {
+export function FormDialog({ title, fields, initial = {}, onClose, onSave, inline = false, submitLabel = "Save changes" }) {
   const modal = useRef(null);
   const titleId = useId();
   const Container = inline ? "section" : "dialog";
@@ -326,7 +326,7 @@ export function FormDialog({ title, fields, initial = {}, onClose, onSave, inlin
               Cancel
             </button>
             <button className="sh-primary" disabled={busy}>
-              {busy ? "Saving…" : "Save changes"}
+              {busy ? "Saving…" : submitLabel}
             </button>
           </footer>
         </form>

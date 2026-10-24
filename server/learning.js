@@ -606,6 +606,7 @@ export async function mutateLearning(client, user, resource, b) {
       admin(user);
       requireMailConfig();
       const email = text(b.email, 254).toLowerCase();
+      const inviteName = b.name ? text(b.name, 120) : "";
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
         throw schoolError(400, "Enter a valid email.");
       const token = randomBytes(32).toString("hex");
@@ -623,7 +624,7 @@ export async function mutateLearning(client, user, resource, b) {
       await sendAccountEmail(
         email,
         "You’re invited to School Hub",
-        `Create or sign in to your account using this invitation: ${origin}/signup?invite=${token}\nThis invitation expires in seven days. Use the invited email address.`,
+        `${inviteName ? `Hello ${inviteName},\n\n` : ""}You have been invited as a ${row.role}. Create or sign in to your account using this invitation: ${origin}/signup?invite=${token}\nThis invitation expires in seven days. Use the invited email address.`,
       );
       break;
     }

@@ -540,8 +540,11 @@ test(
         try {
           await create("admin", "invitations", {
             email: "outsider@example.test",
+            name: "Invited Student",
             role: "student",
           });
+          assert.match(delivered[0].text, /Hello Invited Student/);
+          assert.match(delivered[0].text, /invited as a student/);
           const token = delivered[0].text.match(/invite=([a-f0-9]{64})/)[1];
           assert.equal(
             (await api("student", "accept_invitation", { token })).status,

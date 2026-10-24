@@ -302,24 +302,22 @@ export function PeopleTools({ data, edit, load, role }) {
   }
   return (
     <>
-      <Card title="Invite and import">
+      <EditableSection title={role === "teacher" ? "Invite a new teacher" : "Invite a new student"}
+        label={`Invite ${role}`} submitLabel="Send invitation"
+        fields={[field("name", "Full name", "text", {optional:true,maxLength:120}),field("email", "Email address", "email")]}
+        initial={{role}}
+        onSave={async (values) => { await schoolRequest("invitations", {...values,role}); await load(); }}
+      >
+        <p>Enter their email to send a secure invitation. They will set up or sign in to their own account and accept the {role} role. Invitations expire after seven days.</p>
+        <p className="sh-muted">Full name is optional and personalizes the invitation. The recipient confirms their account details when signing up.</p>
+        <Table rows={data.invitations.filter(i => i.role === role)} columns={[
+          col("email", "Invitation email"),
+          col("expires_at", "Expires", r => new Date(r.expires_at).toLocaleDateString()),
+          col("accepted_at", "Status", r => <Badge>{r.accepted_at ? "accepted" : new Date(r.expires_at)<new Date() ? "expired" : "pending"}</Badge>),
+        ]} />
+      </EditableSection>
+      <Card title="Update existing accounts from CSV">
         <div className="sh-actions">
-          <button
-            className="sh-primary"
-            onClick={() =>
-              edit(
-                "invitations",
-                `Invite ${role}`,
-                [
-                  field("email", "Email address", "email"),
-                  choice("role", "Role", ["student", "teacher"]),
-                ],
-                { role },
-              )
-            }
-          >
-            Send invitation
-          </button>
           <button disabled={busy} onClick={() => input.current.click()}>
             {busy ? "Importing…" : "Import CSV"}
           </button>
@@ -338,29 +336,10 @@ export function PeopleTools({ data, edit, load, role }) {
           validated together; a failed import changes nothing.
         </p>
         {error && <p role="status">{error}</p>}
-        <Table
-          rows={data.invitations.filter((i) => i.role === role)}
-          columns={[
-            col("email", "Invitation email"),
-            col("role", "Role"),
-            col("expires_at", "Expires", (r) =>
-              new Date(r.expires_at).toLocaleDateString(),
-            ),
-            col("accepted_at", "Status", (r) => (
-              <Badge>
-                {r.accepted_at
-                  ? "accepted"
-                  : new Date(r.expires_at) < new Date()
-                    ? "expired"
-                    : "pending"}
-              </Badge>
-            )),
-          ]}
-        />
       </Card>
       {role === "teacher" && (
         <Card
-          title="Faculty departments"
+          title="Assign existing teachers to departments"
           action={
             <button
               onClick={() =>
@@ -374,7 +353,7 @@ export function PeopleTools({ data, edit, load, role }) {
                 ])
               }
             >
-              Assign department
+              Assign teacher department
             </button>
           }
         >
