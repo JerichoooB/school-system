@@ -4,7 +4,7 @@
 - Tables offer 8/20/50 rows, accessible sort state/direction controls, clearer page totals and an explicit empty-search recovery action. Search, sorting and pagination remain client-side for the already authorized dataset.
 - Notification center shows unread counts and All/Unread filters, disables mark-all when caught up, closes on outside click or Escape and restores trigger focus for keyboard dismissal. Status badges now distinguish neutral/success/warning/error in both themes.
 - Lint/build and all 17 academic browser checks pass. New checks exercise table size/sort/search recovery, notification filters/read/dismissal and mobile quick navigation; existing inline/profile/avatar/role/workflow/accessibility checks pass.
-- Production verification follows deployment. No backend, database schema or real user data changes are part of this update.
+- 2ddc2adc is live. Deployed smoke passed database/session/role/private-file/job-denial/logout checks, all 11 student pages and an inline preference save. Eleven sidebar switches took 707ms with no repeated school/session reads. Temporary account and file cleanup succeeded. No backend or database schema changes are part of this update.
 
 # Latest update — inline editing for settings and simple sections
 
