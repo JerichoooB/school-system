@@ -400,6 +400,12 @@ test("approved school screens and role workflows work in a real browser", async 
   );
   await signout();
   await login("teacher");
+  await t.test("staff profile shows teaching details rather than student-only fields", async () => {
+    await open('profile');
+    await page.getByRole('heading',{name:'Teaching & school information',exact:true}).waitFor();
+    assert.equal(await page.getByText('Student number',{exact:true}).count(),0);
+    await page.getByText('Assigned classes',{exact:true}).waitFor();
+  });
   await t.test(
     "teacher creates and publishes an assignment through the form",
     async () => {
@@ -511,9 +517,18 @@ test("approved school screens and role workflows work in a real browser", async 
     });
     try {
       await open("profile");
+      await page.getByLabel("Upload profile photos", {exact:true}).setInputFiles({name:'cancelled.png',mimeType:'image/png',buffer:png});
+      await page.getByRole('button',{name:'Cancel photo',exact:true}).click();
+      assert.equal(fixtureIds.length,0,'preview cancellation must not upload');
+      await page.getByLabel("Upload profile photos", {exact:true}).setInputFiles({name:'invalid.pdf',mimeType:'application/pdf',buffer:Buffer.from('Not a photo')});
+      await page.getByText('Choose a PNG, JPEG or WebP photo.',{exact:true}).waitFor();
+      assert.equal(fixtureIds.length,0,'unsupported photo must not upload');
+
       for (const name of ["first-avatar.png", "replacement-avatar.png"]) {
         const refreshed = page.waitForResponse(r => r.url() === `${base}/api/school` && r.request().method() === "GET");
         await page.getByLabel("Upload profile photos", {exact:true}).setInputFiles({name,mimeType:"image/png",buffer:png});
+        await page.getByRole('img',{name:'Preview of your selected profile photo',exact:true}).waitFor();
+        await page.getByRole('button',{name:'Use this photo',exact:true}).click();
         await refreshed;
         const src = `/api/file?id=${fixtureIds.at(-1)}`;
         for (const selector of [".sh-profile-banner .sh-avatar img", ".sh-user .sh-avatar img", 'a[aria-label="Your profile"] img']) {
@@ -527,6 +542,7 @@ test("approved school screens and role workflows work in a real browser", async 
       for (const name of ["replacement-avatar.png", "first-avatar.png"]) {
         const refreshed = page.waitForResponse(r => r.url() === `${base}/api/school` && r.request().method() === "GET");
         await page.getByRole("button", {name:`Delete ${name}`,exact:true}).click();
+        await page.getByRole('group',{name:'Confirm file removal',exact:true}).getByRole('button',{name:'Remove file',exact:true}).click();
         await refreshed;
       }
       await page.waitForFunction(() => document.querySelectorAll(".sh-avatar img").length === 0);

@@ -558,6 +558,7 @@ export default function Portal() {
     );
   }
   function renderProfile() {
+    const contacts = [profile.phone, profile.address, profile.emergency_name, profile.emergency_phone].filter(value => String(value || "").trim()).length;
     return (
       <>
         <div className="sh-profile-banner">
@@ -565,17 +566,31 @@ export default function Portal() {
           <div>
             <h2>{user.name}</h2>
             <p>{user.email}</p>
-            <Badge>{user.role}</Badge>
+            <div className="sh-profile-tags"><Badge>{user.role}</Badge><span>{zone}</span></div>
           </div>
+          <Link className="sh-profile-settings" to="/settings"><Settings size={16} />Account settings</Link>
         </div>
-        <div className="sh-grid">
+        <div className="sh-profile-summary">
+          <div><strong>{courses.length}</strong><span>Active classes</span></div>
+          <div><strong>{data.files.filter(f=>same(f.owner_id,user.id) && f.purpose === "document").length}</strong><span>Personal documents</span></div>
+          <div><strong>{contacts}/4</strong><span>Optional contact details added</span><progress aria-label="Contact details added" max={4} value={contacts} /></div>
+        </div>
+        <div className="sh-grid sh-profile-grid">
           <ProfileInformation
             user={user}
             profile={profile}
             onSave={(values) => save("profile", values)}
           />
-          <Card title="Academic information">
+          <ProfileInformation
+            user={user}
+            profile={profile}
+            emergency
+            onSave={(values) => save("profile", values)}
+          />
+          <Card title={user.role === "student" ? "Academic information" : "Teaching & school information"}>
+            <p className="sh-muted">Official records are managed by your school.</p>
             <dl>
+              {user.role === "student" ? <>
               <dt>Student number</dt>
               <dd>{profile.student_number || "Not assigned"}</dd>
               <dt>Program</dt>
@@ -585,35 +600,40 @@ export default function Portal() {
               </dd>
               <dt>Year level</dt>
               <dd>{profile.year_level || "Not assigned"}</dd>
-              <dt>Active courses</dt>
+              </> : <>
+                <dt>School role</dt><dd><Badge>{user.role}</Badge></dd>
+                <dt>Departments</dt><dd>{data.teacher_departments.filter(r=>same(r.teacher_id,user.id)).map(r=>data.departments.find(d=>same(d.id,r.department_id))?.name).filter(Boolean).join(", ") || "Not assigned"}</dd>
+              </>}
+              <dt>{user.role === "student" ? "Active courses" : user.role === "teacher" ? "Assigned classes" : "Active classes"}</dt>
               <dd>{courses.length}</dd>
             </dl>
             <small>
               Contact your administrator to update official records.
             </small>
           </Card>
-          <Card title="Your files">
+          <Card title="Profile photo">
+            <p className="sh-muted">Your latest saved photo appears here, in the header and in the sidebar.</p>
             <Files
               files={data.files.filter((f) => same(f.owner_id, user.id))}
               purpose="avatar"
               title="Profile photos"
-              canUpload
-              onChanged={load}
-            />
-            <Files
-              files={data.files.filter((f) => same(f.owner_id, user.id))}
-              purpose="document"
-              title="Personal documents"
+              hideTitle
               canUpload
               onChanged={load}
             />
           </Card>
-          <ProfileInformation
-            user={user}
-            profile={profile}
-            emergency
-            onSave={(values) => save("profile", values)}
-          />
+          <Card title="Personal documents">
+            <p className="sh-muted">Private files for your records. Download a copy before removing anything important.</p>
+            <Files
+              files={data.files.filter((f) => same(f.owner_id, user.id))}
+              purpose="document"
+              title="Personal documents"
+              hideTitle
+              canUpload
+              onChanged={load}
+            />
+          </Card>
+
         </div>
       </>
     );
@@ -2349,6 +2369,7 @@ function ProfileInformation({ user, profile, onSave, emergency = false }) {
     )}>
       {editing ? (
         <form className="sh-form" aria-label={`Edit ${title.toLowerCase()}`} onSubmit={submit}>
+          <p className="sh-muted">{emergency ? "Choose someone your school can contact when you need help." : "Keep your name and contact details up to date. Your sign-in email is read-only here."}</p>
           {emergency ? (
             <>
               <label>Emergency contact name (optional)<input name="emergency_name" defaultValue={profile.emergency_name || ""} maxLength={120} /></label>

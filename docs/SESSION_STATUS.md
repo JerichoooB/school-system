@@ -1,3 +1,12 @@
+# Latest update — profile UI and photo controls
+
+- Profile summary shows real class/document counts, optional contact-detail completeness, timezone/role and an account-settings shortcut. Personal/emergency cards are adjacent; private documents have a full-width section.
+- Academic details are role-aware: students retain official student/program/year fields; staff see school role, departments and relevant class counts.
+- Avatar selection now previews locally before explicit Use this photo. Cancel does not upload; unsupported types and oversize photos are rejected before upload. Blob URLs are revoked when discarded/unmounted. Uploaded photos still update banner/header/sidebar together.
+- Avatar/document deletion now asks for confirmation; photo history identifies current/previous photos and explains fallback to older photos. Added clearer sign-in-email/read-only and emergency-contact guidance. Existing owner authorization remains server-enforced; no backend/schema changes.
+- All 20 academic browser checks passed (preview cancellation/type validation/upload/replacement/confirmed removal, staff profile, editing persistence, mobile and light/dark accessibility). Lint/build pass after final heading/spacing cleanup.
+- Production verification follows deployment.
+
 # Latest update — guided academic setup
 
 - Suggested setup steps show record counts for departments, programs, academic years, terms, courses and classes, with links to the corresponding section. Rooms remain available in the setup tabs.
