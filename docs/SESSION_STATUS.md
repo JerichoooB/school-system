@@ -5,7 +5,7 @@
 - Teachers/Students now have named invitation forms asking for name/email and fixing the intended role automatically. Optional name personalizes the secure invitation; recipients still create/verify their own account and accept the role. Existing account imports and teacher-department assignment are separately labeled.
 - Academic setup tabs/actions use readable names (Rooms/Add room, Academic years, etc.). Existing accounts link to Settings for explicit role management.
 - No schema migration. Lint/build, 31 backend tests and all 18 academic browser checks pass, including course creation, subsequent class selection, missing-teacher guidance and named role-specific invitation delivery (mock SMTP only).
-- Browser fixture schemas from interrupted local diagnostic runs were cleaned after testing. Production deployment verification pending.
+- Browser fixture schemas from interrupted local diagnostic runs were cleaned after testing. a459c778 is live. Deployment smoke passed all 11 student pages, database/session/role/private-file checks, inline preferences and logout; 11 sidebar switches took 774ms with no repeated school/session reads. Temporary live fixtures were removed.
 
 # Latest update — mobile navigation, tables and notification center
 
