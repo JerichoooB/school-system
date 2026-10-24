@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { zonedISO, zonedInput } from "../../shared/time";
-import { X, Search, ChevronLeft, ChevronRight, Inbox } from "lucide-react";
+import { X, Search, ChevronLeft, ChevronRight, Inbox, ArrowDownUp } from "lucide-react";
 export function Empty({ children = "No records yet." }) {
   return <div className="sh-empty"><Inbox size={28} strokeWidth={1.5} aria-hidden="true" /><p>{children}</p></div>;
 }
@@ -27,19 +27,18 @@ export function Stat({ label, value, detail }) {
   );
 }
 export function Badge({ children }) {
-  return (
-    <span
-      className={`sh-badge ${["absent", "inactive", "overdue"].includes(children) ? "warning" : ""}`}
-    >
-      {children}
-    </span>
-  );
+  const status = typeof children === "string" ? children.toLowerCase() : "";
+  const tone = ["failed", "absent", "inactive", "overdue"].includes(status) ? "danger"
+    : ["pending", "late", "draft", "setup needed", "withdrawn"].includes(status) ? "warning"
+    : ["active", "present", "published", "sent", "configured", "completed"].includes(status) ? "positive" : "neutral";
+  return <span className={`sh-badge ${tone}`}>{children}</span>;
 }
 export function Table({ rows, columns, search = true, empty, exportAction }) {
   const [query, setQuery] = useState(""),
     [page, setPage] = useState(0),
     [sort, setSort] = useState(null),
-    [descending, setDescending] = useState(false);
+    [descending, setDescending] = useState(false),
+    [pageSize, setPageSize] = useState(8);
   const filtered = rows.filter((row) =>
     Object.values(row).some((v) =>
       String(v ?? "")
@@ -56,13 +55,13 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
     );
   const current = Math.min(
     page,
-    Math.max(0, Math.ceil(filtered.length / 8) - 1),
+    Math.max(0, Math.ceil(filtered.length / pageSize) - 1),
   );
   return (
     <>
-      {search && (
+      {(search || exportAction || rows.length > 8) && (
         <div className="sh-toolbar">
-          <label className="sh-search">
+          {search && <label className="sh-search">
             <Search size={17} />
             <input
               aria-label="Search records"
@@ -73,12 +72,22 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
                 setPage(0);
               }}
             />
-          </label>
-          {exportAction}
+          </label>}
+          <div className="sh-table-controls">
+            {rows.length > 8 && <label className="sh-page-size">Rows per page
+              <select aria-label="Rows per page" value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(0); }}>
+                {[8,20,50].map(size => <option key={size} value={size}>{size}</option>)}
+              </select>
+            </label>}
+            {exportAction}
+          </div>
         </div>
       )}
       {!filtered.length ? (
-        <Empty>{empty}</Empty>
+        <div className="sh-search-empty">
+          <Empty>{query ? `No results for “${query}”. Try another name or keyword.` : empty}</Empty>
+          {query && <button onClick={() => { setQuery(""); setPage(0); }}>Clear search</button>}
+        </div>
       ) : (
         <>
           <div className="sh-table-wrap" tabIndex={0} role="region" aria-label="Table results">
@@ -86,7 +95,7 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
               <thead>
                 <tr>
                   {columns.map((c) => (
-                    <th key={c.key}>
+                    <th key={c.key} aria-sort={c.key === "actions" ? undefined : sort === c.key ? (descending ? "descending" : "ascending") : "none"}>
                       {c.key !== "actions" ? (
                         <button
                           className="sh-sort"
@@ -96,7 +105,7 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
                           }}
                         >
                           {c.label}
-                          {sort === c.key ? (descending ? " ↓" : " ↑") : ""}
+                          {sort === c.key ? (descending ? " ↓" : " ↑") : <ArrowDownUp size={13} aria-hidden="true" />}
                         </button>
                       ) : (
                         c.label
@@ -106,7 +115,7 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.slice(current * 8, current * 8 + 8).map((row, i) => (
+                {filtered.slice(current * pageSize, current * pageSize + pageSize).map((row, i) => (
                   <tr key={row.id ?? i}>
                     {columns.map((c) => (
                       <td key={c.key}>
@@ -120,7 +129,7 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
           </div>
           <div className="sh-pagination">
             <span>
-              {current * 8 + 1}–{Math.min((current + 1) * 8, filtered.length)}{" "}
+              {current * pageSize + 1}–{Math.min((current + 1) * pageSize, filtered.length)}{" "}
               of {filtered.length}
             </span>
             <button
@@ -130,10 +139,10 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
             >
               <ChevronLeft size={16} />
             </button>
-            <span>Page {current + 1}</span>
+            <span>Page {current + 1} of {Math.ceil(filtered.length / pageSize)}</span>
             <button
               aria-label="Next page"
-              disabled={(current + 1) * 8 >= filtered.length}
+              disabled={(current + 1) * pageSize >= filtered.length}
               onClick={() => setPage(current + 1)}
             >
               <ChevronRight size={16} />

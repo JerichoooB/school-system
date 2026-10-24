@@ -1,3 +1,11 @@
+# Latest update — mobile navigation, tables and notification center
+
+- Added mobile quick navigation for Dashboard/Courses/Schedule/Profile, safe-area spacing and active destination states. Added a keyboard skip-to-content link.
+- Tables offer 8/20/50 rows, accessible sort state/direction controls, clearer page totals and an explicit empty-search recovery action. Search, sorting and pagination remain client-side for the already authorized dataset.
+- Notification center shows unread counts and All/Unread filters, disables mark-all when caught up, closes on outside click or Escape and restores trigger focus for keyboard dismissal. Status badges now distinguish neutral/success/warning/error in both themes.
+- Lint/build and all 17 academic browser checks pass. New checks exercise table size/sort/search recovery, notification filters/read/dismissal and mobile quick navigation; existing inline/profile/avatar/role/workflow/accessibility checks pass.
+- Production verification follows deployment. No backend, database schema or real user data changes are part of this update.
+
 # Latest update — inline editing for settings and simple sections
 
 - Preferences, school policies and grading policy now edit directly inside their cards with Save/Cancel; password change edits within Account & security. Existing help articles edit within the expanded article.

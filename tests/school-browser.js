@@ -225,6 +225,43 @@ test("approved school screens and role workflows work in a real browser", async 
     assert.equal((await query('SELECT content FROM help_articles WHERE id=$1',[article.id])).rows[0].content,'Updated inline answer');
     assert.equal(await page.getByRole('dialog').count(),0);
   });
+  await t.test("table page sizes, sorting and empty-search recovery work", async () => {
+    const ids = [];
+    try {
+      for (let n=0;n<10;n++) ids.push((await query("INSERT INTO users(name,email,password,email_verified) VALUES($1,$2,$3,1) RETURNING id", [`Table person ${n}`,`table-${n}@example.test`,users.student.password])).rows[0].id);
+      await open('settings');
+      const accounts=page.locator('.sh-card').filter({has:page.getByRole('heading',{name:'Account administration',exact:true})});
+      assert.equal(await accounts.locator('tbody tr').count(),8);
+      await accounts.getByLabel('Rows per page',{exact:true}).selectOption('20');
+      assert.equal(await accounts.locator('tbody tr').count(),13);
+      await accounts.getByRole('button',{name:'Name',exact:true}).click();
+      assert.equal(await accounts.locator('th').first().getAttribute('aria-sort'),'ascending');
+      await accounts.getByRole('button',{name:/^Name/}).click();
+      assert.equal(await accounts.locator('th').first().getAttribute('aria-sort'),'descending');
+      await accounts.getByLabel('Search records',{exact:true}).fill('No matching person');
+      await accounts.getByText('No results for “No matching person”. Try another name or keyword.',{exact:true}).waitFor();
+      await accounts.getByRole('button',{name:'Clear search',exact:true}).click();
+      assert.equal(await accounts.locator('tbody tr').count(),13);
+    } finally { await query('DELETE FROM users WHERE id=ANY($1::bigint[])',[ids]); }
+  });
+  await t.test("notification filters, mark-read, outside dismissal and Escape work", async () => {
+    await query("INSERT INTO notifications(user_id,title,href) VALUES($1,'UI test notification','/courses')",[users.admin.id]);
+    await open('dashboard');
+    const trigger=page.getByRole('button',{name:'Notifications',exact:true});
+    await trigger.click();
+    const center=page.getByRole('region',{name:'Notification center',exact:true});
+    await center.getByRole('link',{name:/^UI test notification/}).waitFor();
+    await center.getByRole('button',{name:/^Unread/}).click();
+    await center.getByRole('button',{name:'Mark all read',exact:true}).click();
+    await center.getByText('No unread notifications. You’re all caught up.',{exact:true}).waitFor();
+    assert.equal(await center.getByRole('button',{name:'Mark all read',exact:true}).isDisabled(),true);
+    await page.keyboard.press('Escape');
+    assert.equal(await center.count(),0);
+    assert.equal(await trigger.evaluate(el=>document.activeElement===el),true);
+    await trigger.click();
+    await page.locator('.sh-main h1').click();
+    assert.equal(await center.count(),0);
+  });
   await t.test("sidebar navigation reuses the workspace without session or data reloads", async () => {
     await open("dashboard");
     await page.locator(".sh-app").evaluate(el => { el.dataset.navigationCheck = "persisted"; });
@@ -487,6 +524,10 @@ test("approved school screens and role workflows work in a real browser", async 
           path,
         );
       }
+      const quickNav = page.getByRole('navigation',{name:'Quick navigation',exact:true});
+      await quickNav.getByRole('link',{name:'Open schedule',exact:true}).click();
+      await page.waitForURL(`${base}/schedule`);
+      await quickNav.locator('a[href="/schedule"][aria-current="page"]').waitFor();
       await page
         .getByRole("button", { name: "Toggle navigation", exact: true })
         .click();

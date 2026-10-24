@@ -107,6 +107,7 @@ export default function Portal() {
     [dialog, setDialog] = useState(null),
     [menu, setMenu] = useState(false),
     [bells, setBells] = useState(false),
+    [unreadOnly, setUnreadOnly] = useState(false),
     [selectedCourse, setSelectedCourse] = useState(""),
     [filter, setFilter] = useState(""),
     [assignmentTab, setAssignmentTab] = useState("Upcoming"),
@@ -148,6 +149,25 @@ export default function Portal() {
       active = false;
     };
   }, [setAppearance]);
+  useEffect(() => {
+    if (!bells && !menu) return;
+    function dismiss(event) {
+      if (event.key === "Escape") {
+        setBells(false);
+        setMenu(false);
+        document.querySelector(bells ? '.sh-bell' : '.sh-mobile-menu')?.focus();
+      }
+    }
+    function outside(event) {
+      if (bells && !event.target.closest('.sh-notification-panel, .sh-bell')) setBells(false);
+    }
+    window.addEventListener("keydown", dismiss);
+    document.addEventListener("pointerdown", outside);
+    return () => {
+      window.removeEventListener("keydown", dismiss);
+      document.removeEventListener("pointerdown", outside);
+    };
+  }, [bells, menu]);
   // Keep navigation immediate while periodically revalidating server-owned data.
   // Nothing is cached in browser storage, and every mutation is authorized by the API.
   useEffect(() => {
@@ -253,6 +273,7 @@ export default function Portal() {
         )}
       </main>
     );
+  const unreadCount = data.notifications.filter(n => !n.read_at).length;
   const { user } = data,
     isAdmin = user.role === "admin",
     isStaff = user.role !== "student";
@@ -2053,6 +2074,7 @@ export default function Portal() {
   }
   return (
     <div className="sh-app">
+      <a className="sh-skip-link" href="#school-main">Skip to content</a>
       <button
         className="sh-mobile-menu"
         onClick={() => setMenu(!menu)}
@@ -2149,10 +2171,14 @@ export default function Portal() {
             <button
               aria-label="Notifications"
               className="sh-bell"
+              aria-expanded={bells}
+              aria-controls="school-notifications"
+              aria-describedby="school-unread-count"
               onClick={() => setBells(!bells)}
             >
               <Bell size={20} />
-              {data.notifications.some((n) => !n.read_at) && <i />}
+              {unreadCount > 0 && <i aria-hidden="true" />}
+              <span className="sh-sr-only" id="school-unread-count">{unreadCount} unread</span>
             </button>
             <Link to="/profile" className="sh-avatar" aria-label="Your profile">
               {avatarContent}
@@ -2160,12 +2186,19 @@ export default function Portal() {
           </div>
         </header>
         {bells && (
-          <div className="sh-notification-panel">
-            <h2>Notifications</h2>
-            <button onClick={() => act("notifications", {})}>
-              Mark all read
-            </button>
-            {data.notifications.map((n) => (
+          <section className="sh-notification-panel" id="school-notifications" aria-label="Notification center">
+            <div className="sh-notification-heading">
+              <div><h2>Notifications</h2><p className="sh-muted">{unreadCount ? `${unreadCount} unread updates` : "You’re all caught up"}</p></div>
+              <button aria-label="Close notifications" onClick={() => { setBells(false); document.querySelector('.sh-bell')?.focus(); }}><X size={18} /></button>
+            </div>
+            <div className="sh-notification-tools">
+              <div className="sh-tabs" role="group" aria-label="Notification filters">
+                <button className={!unreadOnly ? "active" : ""} aria-pressed={!unreadOnly} onClick={() => setUnreadOnly(false)}>All</button>
+                <button className={unreadOnly ? "active" : ""} aria-pressed={unreadOnly} onClick={() => setUnreadOnly(true)}>Unread ({unreadCount})</button>
+              </div>
+              <button disabled={!unreadCount} onClick={() => act("notifications", {})}>Mark all read</button>
+            </div>
+            {data.notifications.filter(n => !unreadOnly || !n.read_at).map((n) => (
               <Link
                 key={n.id}
                 to={n.href}
@@ -2182,10 +2215,10 @@ export default function Portal() {
                 {!n.read_at && <Badge>New</Badge>}
               </Link>
             ))}
-            {!data.notifications.length && <Empty>No notifications yet.</Empty>}
-          </div>
+            {!data.notifications.filter(n => !unreadOnly || !n.read_at).length && <Empty>{unreadOnly ? "No unread notifications. You’re all caught up." : "No notifications yet. School updates will appear here."}</Empty>}
+          </section>
         )}
-        <main className="sh-main">
+        <main className="sh-main" id="school-main" tabIndex={-1}>
           <div className="sh-page-heading">
             <div>
               <h1>{title}</h1>
@@ -2241,6 +2274,13 @@ export default function Portal() {
           }[page]()}
         </main>
       </div>
+      <nav className="sh-quick-nav" aria-label="Quick navigation" onClick={() => { setError(""); setNotice(""); }}>
+        {[["Dashboard", "dashboard", LayoutDashboard], ["Courses", "courses", BookOpen], ["Schedule", "schedule", CalendarDays], ["Profile", "profile", User]].map(([name, path, Icon]) => (
+          <Link key={path} to={`/${path}`} aria-label={`Open ${name.toLowerCase()}`} aria-current={page === path ? "page" : undefined}>
+            <Icon size={20} strokeWidth={1.7} /><span>{name}</span>
+          </Link>
+        ))}
+      </nav>
       {dialog && (
         <FormDialog
           key={dialog.title}
