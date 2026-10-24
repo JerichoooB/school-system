@@ -1,3 +1,13 @@
+# Latest update — guided academic setup
+
+- Suggested setup steps show record counts for departments, programs, academic years, terms, courses and classes, with links to the corresponding section. Rooms remain available in the setup tabs.
+- Course creation can create and auto-select a department without leaving or clearing the draft. The UI explicitly explains that the department is saved immediately, even before the course is saved.
+- Academic records create/edit inline, including departments, rooms and terms. Department lists show related programs/course codes; programs/courses show department names; terms show academic year names.
+- Course catalog is the sole creation entry point: the academic setup Courses tab links to it instead of duplicating Add course.
+- Deletion uses row locking and server-side dependency checks across all six catalog tables, including historical links. Errors return 409 with linked counts and example course/program/term/class names. Confirmation controls explicitly say Delete record.
+- Lint/build, 31 backend tests and all 19 academic browser checks pass. Coverage includes quick department creation with draft preservation, automatic selection, inline edits, relationship display and blocked deletion. No schema migration required.
+- Production verification follows deployment.
+
 # Latest fix — distinguish creation from assignment
 
 - Courses now has a prominent inline Create course form for code, name, optional description, credits and optional department, separate from Create class.

@@ -96,12 +96,12 @@ const stamp = (value, zone = "Asia/Manila") =>
       }).format(new Date(value))
     : "—";
 const day = (value) => (value ? String(value).slice(0, 10) : "—");
-const courseFields = (departments) => [
+const courseFields = (departments, createDepartment) => [
   field("code", "Course code", "text", {help:"A unique code, for example CS101."}),
   field("name", "Course name"),
   field("description", "Description", "textarea", {optional:true}),
   field("credits", "Credits", "number", {min:0.1,max:30,step:0.1}),
-  select("department_id", "Department", departments, "name", {optional:true}),
+  select("department_id", "Department", departments, "name", {optional:true, ...(createDepartment ? {quickCreate:{label:"Add a new department",create:createDepartment}} : {})}),
 ];
 export default function Portal() {
   const location = useLocation(),
@@ -128,6 +128,11 @@ export default function Portal() {
     lastLoaded.current = Date.now();
     return result;
   }, []);
+  const createDepartment = useCallback(async (name) => {
+    const response = await schoolRequest("departments", {name});
+    await load();
+    return response.record;
+  }, [load]);
   useEffect(() => {
     let active = true;
     schoolRequest()
@@ -218,6 +223,7 @@ export default function Portal() {
   function edit(resource, title, fields, initial = {}) {
     setDialog({
       title,
+      ...(resource === "catalog_delete" ? {description:`Delete this ${initial.table.replaceAll("_", " ")} record? Linked courses, programs, classes and historical records must be reassigned or removed first.`,submitLabel:"Delete record"} : {}),
       fields: fields.map((f) => ({ ...f, timezone: zone })),
       initial,
       onSave: (values) => save(resource, values),
@@ -617,11 +623,7 @@ export default function Portal() {
     const classReady = data.courses.length > 0 && data.terms.length > 0 && data.people.some(p => p.role === "teacher" && p.status === "active");
     return (
       <>
-        {isAdmin && <EditableSection title="Course catalog" label="Create course" submitLabel="Create course"
-          fields={courseFields(data.departments)} initial={{credits:3}}
-          onSave={(values) => save("courses", values)}>
-          <p>Create a new subject by entering its code, name and credits. You can assign a teacher and term afterward by creating a class section.</p>
-        </EditableSection>}
+        {isAdmin && <CourseCatalog departments={data.departments} onCreateDepartment={createDepartment} onSave={values => save("courses",values)} />}
         {isAdmin && !classReady && <div className="sh-setup-note">
           <strong>Before you create a class</strong>
           <ul>
@@ -630,7 +632,7 @@ export default function Portal() {
             {!data.people.some(p => p.role === "teacher" && p.status === "active") && <li><Link to="/teachers">Invite a teacher</Link>. They can be assigned after accepting their invitation.</li>}
           </ul>
         </div>}
-        {isAdmin && <h2 className="sh-section-title">Class sections</h2>}
+        {isAdmin && <h2 id="course-classes" tabIndex={-1} className="sh-section-title">Class sections</h2>}
         <div className="sh-toolbar">
           <label className="sh-search">
             <input
@@ -893,7 +895,7 @@ export default function Portal() {
             the course catalog.
           </Empty>
         )}
-        {isAdmin && <AcademicSetup data={data} edit={edit} />}
+        {isAdmin && <AcademicSetup data={data} edit={edit} load={load} />}
       </>
     );
   }
@@ -2313,6 +2315,12 @@ export default function Portal() {
     </div>
   );
 }
+function CourseCatalog({ departments, onCreateDepartment, onSave }) {
+  return <EditableSection id="course-catalog" title="Course catalog" label="Create course" submitLabel="Create course"
+    fields={courseFields(departments,onCreateDepartment)} initial={{credits:3}} onSave={onSave}>
+    <p>Create a new subject by entering its code, name and credits. You can assign a teacher and term afterward by creating a class section.</p>
+  </EditableSection>;
+}
 function ProfileInformation({ user, profile, onSave, emergency = false }) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -2376,8 +2384,8 @@ function ProfileInformation({ user, profile, onSave, emergency = false }) {
     </Card>
   );
 }
-function AcademicSetup({ data, edit }) {
-  const [tab, setTab] = useState("courses");
+function AcademicSetup({ data, edit, load }) {
+  const [tab, setTab] = useState("departments"), [editingRecord, setEditingRecord] = useState(null);
   const definitions = {
     academic_years: [
       field("name", "Academic year"),
@@ -2410,27 +2418,35 @@ function AcademicSetup({ data, edit }) {
     <Card
       title="Academic setup"
       action={
-        <button
-          onClick={() =>
-            edit(tab, `Add ${labels[tab].replace(/s$/, "").toLowerCase()}`, definitions[tab], tab === "courses" ? {credits:3} : {})
-          }
-        >
-          <Plus size={16} />
-          Add {labels[tab].replace(/s$/, "").toLowerCase()}
-        </button>
+        tab === "courses" ? <button onClick={() => { document.getElementById("course-catalog")?.scrollIntoView({block:"start"}); document.querySelector('#course-catalog button')?.focus(); }}>Create courses in Course catalog ↑</button> :
+        <button onClick={() => setEditingRecord({})}><Plus size={16} />Add {labels[tab].replace(/s$/, "").toLowerCase()}</button>
       }
     >
+      <p className="sh-muted">Suggested setup order. Programs group courses into curricula; rooms can be added whenever needed. Existing records stay available for editing below.</p>
+      <div className="sh-setup-steps" role="group" aria-label="Academic setup steps">
+        {["departments","programs","academic_years","terms","courses","classes"].map((step,index) => <button key={step} onClick={() => {
+          if(step === "courses" || step === "classes") { const element = document.getElementById(step === "courses" ? "course-catalog" : "course-classes"); element?.scrollIntoView({block:"start"}); if(step === "courses") element?.querySelector('button')?.focus(); else element?.focus(); }
+          else { setTab(step); setEditingRecord(null); }
+        }}><span>{index+1}</span><strong>{step === "classes" ? "Classes" : labels[step]}</strong><small>{(step === "classes" ? data.sections : data[step]).length} records</small></button>)}
+      </div>
       <div className="sh-tabs">
         {Object.keys(definitions).map((t) => (
           <button
             className={tab === t ? "active" : ""}
-            onClick={() => setTab(t)}
+            onClick={() => {setTab(t);setEditingRecord(null);}}
             key={t}
           >
             {labels[t]}
           </button>
         ))}
       </div>
+      {editingRecord && <div className="sh-catalog-editor">
+        <h3>{editingRecord.id ? "Edit" : "Add"} {labels[tab].replace(/s$/, "").toLowerCase()}</h3>
+        <FormDialog inline key={`${tab}-${editingRecord.id || "new"}`} title={`Academic ${labels[tab].toLowerCase()}`} fields={definitions[tab]}
+          initial={{...editingRecord,table:tab,starts_on:day(editingRecord.starts_on),ends_on:day(editingRecord.ends_on)}}
+          onClose={() => setEditingRecord(null)}
+          onSave={async values => { await schoolRequest(editingRecord.id ? "catalog_update" : tab,values); await load(); }} />
+      </div>}
       <Table
         key={tab}
         rows={data[tab]}
@@ -2440,17 +2456,7 @@ function AcademicSetup({ data, edit }) {
             <div className="sh-actions">
               <button
                 onClick={() =>
-                  edit(
-                    "catalog_update",
-                    "Edit academic record",
-                    definitions[tab],
-                    {
-                      ...r,
-                      table: tab,
-                      starts_on: day(r.starts_on),
-                      ends_on: day(r.ends_on),
-                    },
-                  )
+                  setEditingRecord(r)
                 }
               >
                 Edit
@@ -2467,10 +2473,15 @@ function AcademicSetup({ data, edit }) {
               </button>
             </div>
           )),
+          ...(tab === "departments" ? [
+            col("programs", "Programs", r => data.programs.filter(p => same(p.department_id,r.id)).map(p=>p.name).join(", ") || "None"),
+            col("courses", "Courses", r => data.courses.filter(c => same(c.department_id,r.id)).map(c=>c.code).join(", ") || "None"),
+          ] : tab === "programs" ? [col("department", "Department", r => data.departments.find(d=>same(d.id,r.department_id))?.name || "Not assigned")] : []),
           ...(tab === "courses"
-            ? [col("code", "Code"), col("credits", "Credits")]
+            ? [col("code", "Code"), col("credits", "Credits"), col("department", "Department", r=>data.departments.find(d=>same(d.id,r.department_id))?.name || "Not assigned")]
             : tab === "terms"
               ? [
+                  col("year", "Academic year", r=>data.academic_years.find(y=>same(y.id,r.academic_year_id))?.name || "Not assigned"),
                   col("starts_on", "Start", (r) => day(r.starts_on)),
                   col("ends_on", "End", (r) => day(r.ends_on)),
                 ]

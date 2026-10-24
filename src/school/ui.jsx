@@ -4,9 +4,9 @@ import { X, Search, ChevronLeft, ChevronRight, Inbox, ArrowDownUp } from "lucide
 export function Empty({ children = "No records yet." }) {
   return <div className="sh-empty"><Inbox size={28} strokeWidth={1.5} aria-hidden="true" /><p>{children}</p></div>;
 }
-export function Card({ title, action, children, className = "" }) {
+export function Card({ title, action, children, className = "", id }) {
   return (
-    <section className={`sh-card ${className}`}>
+    <section id={id} className={`sh-card ${className}`}>
       {title && (
         <div className="sh-card-head">
           <h2>{title}</h2>
@@ -153,17 +153,34 @@ export function Table({ rows, columns, search = true, empty, exportAction }) {
     </>
   );
 }
-export function EditableSection({ title, label, fields, initial, onSave, children, canEdit = true, card = true, submitLabel = "Save changes" }) {
+export function EditableSection({ title, label, fields, initial, onSave, children, canEdit = true, card = true, submitLabel = "Save changes", id }) {
   const [editing, setEditing] = useState(false);
   const action = canEdit && !editing && <button onClick={() => setEditing(true)}>{label || `Edit ${title.toLowerCase()}`}</button>;
   const content = editing ? (
     <FormDialog inline submitLabel={submitLabel} title={title} fields={fields} initial={initial} onSave={onSave} onClose={() => setEditing(false)} />
   ) : children;
-  return card ? <Card title={title} action={action}>{content}</Card> : (
+  return card ? <Card id={id} title={title} action={action}>{content}</Card> : (
     <div className="sh-inline-section">{action}{content}</div>
   );
 }
-export function FormDialog({ title, fields, initial = {}, onClose, onSave, inline = false, submitLabel = "Save changes" }) {
+function QuickCreate({ config, onCreated }) {
+  const [open, setOpen] = useState(false), [name, setName] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  async function create() {
+    if (!name.trim()) { setError("Enter a name."); return; }
+    setBusy(true); setError("");
+    try { const record = await config.create(name.trim()); onCreated(record); setOpen(false); setName(""); }
+    catch (e) { setError(e.message); } finally { setBusy(false); }
+  }
+  return <div className="sh-quick-create">
+    {!open ? <button type="button" onClick={() => setOpen(true)}>{config.label}</button> : <div role="group" aria-label={config.label}>
+      <p className="sh-muted">The new department is saved immediately; your course draft stays open.</p>
+      <input aria-label="New department name" value={name} maxLength={200} disabled={busy} onChange={e => setName(e.target.value)} onKeyDown={e => { if(e.key === "Enter") { e.preventDefault(); create(); } }} />
+      <div className="sh-actions"><button type="button" disabled={busy} onClick={create}>{busy ? "Adding…" : "Add department"}</button><button type="button" disabled={busy} onClick={() => {setOpen(false);setError("");}}>Cancel department</button></div>
+      {error && <p role="alert" className="sh-error">{error}</p>}
+    </div>}
+  </div>;
+}
+export function FormDialog({ title, fields, initial = {}, onClose, onSave, inline = false, submitLabel = "Save changes", description }) {
   const modal = useRef(null);
   const titleId = useId();
   const Container = inline ? "section" : "dialog";
@@ -237,12 +254,11 @@ export function FormDialog({ title, fields, initial = {}, onClose, onSave, inlin
             <X />
           </button>
         </header>}
+        {description && <p>{description}</p>}
         <form onSubmit={submit} aria-label={inline ? `Edit ${title.toLowerCase()}` : undefined}>
           {fields.map((f) => (
-            <label
-              key={f.key}
-              className={f.type === "checkbox" ? "sh-check" : ""}
-            >
+            <div key={f.key}>
+            <label className={f.type === "checkbox" ? "sh-check" : ""}>
               {f.type === "checkbox" ? (
                 <>
                   <input
@@ -315,6 +331,8 @@ export function FormDialog({ title, fields, initial = {}, onClose, onSave, inlin
               )}
               {f.help && <small aria-hidden="true">{f.help}</small>}
             </label>
+            {f.quickCreate && <QuickCreate config={f.quickCreate} onCreated={record => setValues(current => ({...current,[f.key]:record.id}))} />}
+            </div>
           ))}
           {error && (
             <p className="sh-error" role="alert">

@@ -752,6 +752,30 @@ export async function mutateLearning(client, user, resource, b) {
         "terms",
         "courses",
       ]);
+      const existing = await q(`SELECT id FROM ${table} WHERE id=$1 FOR UPDATE`, [id(b.id)]);
+      if (!existing) throw schoolError(404, "Record not found.");
+      const dependencies = {
+        departments: [["programs","department_id","programs"],["courses","department_id","courses"],["teacher_departments","department_id","teacher assignments"]],
+        programs: [["profiles","program_id","student profiles"],["program_courses","program_id","curriculum courses"],["announcements","program_id","announcements"]],
+        academic_years: [["terms","academic_year_id","terms"]],
+        terms: [["sections","term_id","class sections"]],
+        courses: [["sections","course_id","class sections"],["program_courses","course_id","curriculum entries"]],
+        rooms: [["meetings","room_id","class times"],["exams","room_id","exams"],["schedule_exceptions","room_id","calendar changes"]],
+      };
+      const links = [];
+      for (const [source, key, label] of dependencies[table]) {
+        const count = Number((await q(`SELECT count(*) AS count FROM ${source} WHERE ${key}=$1`,[id(b.id)])).count);
+        if(count) {
+          const display = count === 1 ? label.replace(/ies$/, "y").replace(/s$/, "") : label;
+          let examples = "";
+          if (["programs","courses","terms","sections"].includes(source)) {
+            const named = (await client.query(`SELECT name FROM ${source} WHERE ${key}=$1 ORDER BY name LIMIT 3`,[id(b.id)])).rows;
+            examples = ` (${named.map(item => item.name).join(", ")}${count > 3 ? ", …" : ""})`;
+          }
+          links.push(`${count} ${display}${examples}`);
+        }
+      }
+      if (links.length) throw schoolError(409, `Cannot delete this record: linked to ${links.join(", ")}. Reassign or remove those links first. Historical records also count.`);
       row = await q(`DELETE FROM ${table} WHERE id=$1 RETURNING id`, [
         id(b.id),
       ]);

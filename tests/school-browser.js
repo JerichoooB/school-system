@@ -262,6 +262,44 @@ test("approved school screens and role workflows work in a real browser", async 
     await page.locator('.sh-main h1').click();
     assert.equal(await center.count(),0);
   });
+  await t.test("guided setup supports quick departments, inline edits, relationships and safe deletion", async () => {
+    await open('courses');
+    const catalog=page.locator('#course-catalog');
+    await catalog.getByRole('button',{name:'Create course',exact:true}).click();
+    const form=catalog.getByRole('form',{name:'Edit course catalog',exact:true});
+    await form.getByLabel('Course code',{exact:true}).fill('SETUP101');
+    await form.getByLabel('Course name',{exact:true}).fill('Setup workflow subject');
+    await form.getByRole('button',{name:'Add a new department',exact:true}).click();
+    await form.getByLabel('New department name',{exact:true}).fill('Setup department');
+    await form.getByRole('button',{name:'Add department',exact:true}).click();
+    await form.getByRole('option',{name:'Setup department',exact:true}).waitFor({state:'attached'});
+    const dept=(await query("SELECT id FROM departments WHERE name='Setup department'")).rows[0];
+    assert.equal(await form.getByLabel('Department (optional)',{exact:true}).inputValue(),String(dept.id));
+    assert.equal(await form.getByLabel('Course name',{exact:true}).inputValue(),'Setup workflow subject');
+    await form.getByRole('button',{name:'Create course',exact:true}).click();
+    await form.waitFor({state:'hidden'});
+    const setup=page.locator('.sh-card').filter({has:page.getByRole('heading',{name:'Academic setup',exact:true})});
+    assert.equal(await setup.getByRole('group',{name:'Academic setup steps',exact:true}).getByRole('button').count(),6);
+    await setup.getByRole('button',{name:'Departments',exact:true}).click();
+    let row=setup.getByRole('row').filter({hasText:'Setup department'});
+    await row.getByText('SETUP101',{exact:true}).waitFor();
+    await row.getByRole('button',{name:'Edit',exact:true}).click();
+    assert.equal(await page.getByRole('dialog').count(),0);
+    const editor=setup.getByRole('form',{name:'Edit academic departments',exact:true});
+    await editor.getByLabel('Department name',{exact:true}).fill('Updated setup department');
+    await editor.getByRole('button',{name:'Save changes',exact:true}).click();
+    await editor.waitFor({state:'hidden'});
+    row=setup.getByRole('row').filter({hasText:'Updated setup department'});
+    await row.getByRole('button',{name:'Delete',exact:true}).click();
+    const dialog=page.getByRole('dialog');
+    await dialog.getByRole('button',{name:'Delete record',exact:true}).click();
+    await dialog.getByRole('alert').filter({hasText:'1 course'}).waitFor();
+    assert.equal(Number((await query('SELECT count(*) FROM departments WHERE id=$1',[dept.id])).rows[0].count),1);
+    await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
+    await setup.locator('.sh-tabs').getByRole('button',{name:'Courses',exact:true}).click();
+    assert.equal(await setup.getByRole('button',{name:'Add course',exact:true}).count(),0);
+    await setup.getByRole('row').filter({hasText:'SETUP101'}).getByText('Updated setup department',{exact:true}).waitFor();
+  });
   await t.test("new courses and teacher invitations are distinct from class assignment", async () => {
     await open('courses');
     const catalog=page.locator('.sh-card').filter({has:page.getByRole('heading',{name:'Course catalog',exact:true})});
@@ -353,7 +391,10 @@ test("approved school screens and role workflows work in a real browser", async 
         .click();
       await page.getByLabel("Room name", { exact: true }).fill("Lab 101");
       await page.getByLabel("Capacity", { exact: true }).fill("30");
-      await saveDialog();
+      assert.equal(await page.getByRole("dialog").count(),0);
+      const editor=page.getByRole("form",{name:"Edit academic rooms",exact:true});
+      await editor.getByRole("button",{name:"Save changes",exact:true}).click();
+      await editor.waitFor({state:"hidden"});
       await page.getByRole("cell", { name: "Lab 101", exact: true }).waitFor();
     },
   );

@@ -478,7 +478,7 @@ test(
               id: course.id,
             })
           ).status,
-          400,
+          409,
         );
       },
     );
