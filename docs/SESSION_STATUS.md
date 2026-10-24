@@ -6,7 +6,7 @@
 - Course catalog is the sole creation entry point: the academic setup Courses tab links to it instead of duplicating Add course.
 - Deletion uses row locking and server-side dependency checks across all six catalog tables, including historical links. Errors return 409 with linked counts and example course/program/term/class names. Confirmation controls explicitly say Delete record.
 - Lint/build, 31 backend tests and all 19 academic browser checks pass. Coverage includes quick department creation with draft preservation, automatic selection, inline edits, relationship display and blocked deletion. No schema migration required.
-- Production verification follows deployment.
+- e3d0d08e is live. Production smoke passed database/session/permissions/private-file/job-denial checks, all 11 student routes, inline preference saving and logout. Eleven sidebar switches took 744ms with no repeated school/session reads; temporary live fixtures were removed.
 
 # Latest fix — distinguish creation from assignment
 
