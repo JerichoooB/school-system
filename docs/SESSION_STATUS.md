@@ -5,7 +5,7 @@
 - Avatar selection now previews locally before explicit Use this photo. Cancel does not upload; unsupported types and oversize photos are rejected before upload. Blob URLs are revoked when discarded/unmounted. Uploaded photos still update banner/header/sidebar together.
 - Avatar/document deletion now asks for confirmation; photo history identifies current/previous photos and explains fallback to older photos. Added clearer sign-in-email/read-only and emergency-contact guidance. Existing owner authorization remains server-enforced; no backend/schema changes.
 - All 20 academic browser checks passed (preview cancellation/type validation/upload/replacement/confirmed removal, staff profile, editing persistence, mobile and light/dark accessibility). Lint/build pass after final heading/spacing cleanup.
-- Production verification follows deployment.
+- b3937798 is live. Production smoke passed profile and all other 11 student routes, database/session/role/private-file/job-denial checks, inline preferences and logout. Eleven page switches took 718ms without repeated school/session reads. Temporary account/file cleanup succeeded.
 
 # Latest update — guided academic setup
 
